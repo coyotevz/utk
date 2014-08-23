@@ -166,10 +166,10 @@ class Rectangle(_Rectangle):
     __slots__ = ()
 
     def __new__(cls, x=None, y=None, width=None, height=None):
-        x = x or -1
-        y = y or -1
-        width = width or 1
-        height = height or 1
+        x = x if x is not None else -1
+        y = y if y is not None else -1
+        width = width if width is not None else 1
+        height = height if height is not None else 1
         return _Rectangle.__new__(cls, x, y, width, height)
 
     def intersect(self, other):
