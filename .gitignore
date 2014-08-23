@@ -1,0 +1,10 @@
+*.swp
+*.pyc
+*.egg-info
+*.coverage
+*.hgignore
+.hg
+docs/_build
+dist
+build
+htmlcov
