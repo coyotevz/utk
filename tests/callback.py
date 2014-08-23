@@ -17,7 +17,7 @@ class SignalEmitCallback(object):
         self.signal = signal
         self.called = False
 
-    def __call__(self, widget, data=None, *args):
+    def __call__(self, widget=None, data=None, *args):
         self.called = True
         self.data = data
         self.args = args

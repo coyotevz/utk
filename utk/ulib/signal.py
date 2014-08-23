@@ -127,6 +127,7 @@ class SignalBase(object):
                     stop = cb_after(*args)
             else:
                 break
+        return stop
 
 class Signal(SignalBase):
     """
@@ -207,12 +208,10 @@ class Signal(SignalBase):
         super(Signal, self).__init__(name, default_cb=default_cb, flag=flag)
 
     def emit(self, *args):
-
         if self._default_cb is None and self._default_cb_name:
             self._default_cb = self._get_default_cb()
 
         super(Signal, self).emit(*args)
-#    emit.__doc__ = super(Signal, self).emit.__doc__
 
     def _get_default_cb(self):
         assert self._namespace, "i don't know where to find default callback"
