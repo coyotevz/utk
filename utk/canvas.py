@@ -305,8 +305,6 @@ class TextCanvas(Canvas):
     """Class for storing rendered text attributes"""
 
     def __init__(self, text=None, attr=None, cs=None, left=0, top=0, cols=1, rows=1):
-        super(TextCanvas, self).__init__(left, top, cols, rows)
-
         if text is None:
             text = []
         elif not isiterable(text):
@@ -320,6 +318,8 @@ class TextCanvas(Canvas):
         self._attr = attr
         self._cs = cs
         self._text = text
+
+        super(TextCanvas, self).__init__(left, top, cols, rows)
 
     def body_content(self, trim_left=0, trim_top=0, cols=None, rows=None,
                      attr_map=None):
