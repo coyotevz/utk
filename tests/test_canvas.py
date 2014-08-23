@@ -50,7 +50,7 @@ class TestCanvas(object):
         c = Canvas(10, 7, 8, 12)
         assert c.is_dirty
         assert c._area == (10, 7, 8, 12)
-        assert c._update == [(10, 7, 8, 12)]
+        assert c._update == set([(10, 7, 8, 12)])
         assert not c._childs
         assert not c._parent
 
@@ -61,34 +61,34 @@ class TestCanvas(object):
         p.add_child(c1)
         assert p.is_dirty
         assert p._childs == [c1]
-        assert p._update == [(0, 0, 80, 24),
-                             (1, 1, 10, 5)]
+        assert p._update == set([(0, 0, 80, 24),
+                                 (1, 1, 10, 5)])
         assert c1._parent is p
         p.add_child(c2)
         assert p._childs == [c1, c2]
         assert c2._parent is p
-        assert p._update == [(0, 0, 80, 24),
-                             (1, 1, 10, 5),
-                             (40, 12, 10, 5)]
+        assert p._update == set([(0, 0, 80, 24),
+                                 (1, 1, 10, 5),
+                                 (40, 12, 10, 5)])
 
     def test_remove_child(self):
         p, c1, c2 = self.sample_canvas()
         p.add_child(c1)
         p.add_child(c2)
         p._dirty = False
-        p._update = []
+        p._update.clear()
 
         p.remove_child(c1)
         assert p.is_dirty
         assert c1._parent is None
         assert p._childs == [c2]
-        assert p._update == [(1, 1, 10, 5)]
+        assert p._update == set([(1, 1, 10, 5)])
         p.remove_child(c2)
         assert c2._parent == None
         assert not p._childs
-        assert p._update == [(1, 1, 10, 5),
-                             (40, 12, 10, 5)]
-        p._update = []
+        assert p._update == set([(1, 1, 10, 5),
+                                (40, 12, 10, 5)])
+        p._update.clear()
         p._dirty = False
         p.remove_child(c1)
 
@@ -99,16 +99,16 @@ class TestCanvas(object):
         c2.set_parent(p2)
         assert p1._childs == [c1]
         assert p2._childs == [c2]
-        p1._update = []
-        p2._update = []
+        p1._update.clear()
+        p2._update.clear()
         c2.set_parent(p1)
         assert c2._parent is p1
         assert not p2._childs
-        assert p1._update == [(40, 12, 10, 5)]
-        assert p2._update == [(40, 12, 10, 5)]
+        assert p1._update == set([(40, 12, 10, 5)])
+        assert p2._update == set([(40, 12, 10, 5)])
         p2.set_parent(p1)
-        assert p1._update == [(40, 12, 10, 5),
-                              (10, 10, 20, 20)]
+        assert p1._update == set([(40, 12, 10, 5),
+                                  (10, 10, 20, 20)])
 
     def test_unparent(self):
         p, c1, c2 = self.sample_canvas()
@@ -116,20 +116,20 @@ class TestCanvas(object):
         p.add_child(c2)
         assert c1._parent is p
         assert c2._parent is p
-        p._update = []
+        p._update.clear()
         c1.unparent()
         assert c1._parent is None
         assert p._childs == [c2]
-        assert p._update == [(1, 1, 10, 5)]
+        assert p._update == set([(1, 1, 10, 5)])
         c1.unparent()
         assert c1._parent is None
-        assert p._update == [(1, 1, 10, 5)]
+        assert p._update == set([(1, 1, 10, 5)])
 
     def test_move_to(self):
         p, c1, c2 = self.sample_canvas()
         p.add_child(c1)
         p.add_child(c2)
-        p._update = []
+        p._update.clear()
         c1.move_to()
         assert not p._update
         c1.move_to(1, 1)
@@ -137,47 +137,47 @@ class TestCanvas(object):
         olda1 = c1._area
         c1.move_to(0, 0)
         newa1 = c1._area
-        assert p._update == [olda1, newa1]
+        assert p._update == set([olda1, newa1])
         olda2 = c2._area
         c2.move_to(1, 1)
         newa2 = c2._area
-        assert p._update == [olda1, newa1, olda2, newa2]
+        assert p._update == set([olda1, newa1, olda2, newa2])
 
     def test_move(self):
         p, c1, c2 = self.sample_canvas()
         p.add_child(c1)
         p.add_child(c2)
-        p._update = []
+        p._update.clear()
         c1.move(0, 0)
         assert not p._update
         olda1 = c1._area
         c1.move(3, 5)
         newa1 = c1._area
-        assert p._update == [olda1, newa1]
+        assert p._update == set([olda1, newa1])
         olda2 = c2._area
         c2.move(-10, 2)
         newa2 = c2._area
-        assert p._update == [olda1, newa1, olda2, newa2]
+        assert p._update == set([olda1, newa1, olda2, newa2])
 
     def test_invalidate(self):
         c = self.sample_canvas()[1]
         c._dirty = None
-        c._update = []
+        c._update.clear()
         c.invalidate()
         assert c.is_dirty
-        assert c._update == [c._area]
+        assert c._update == set([c._area])
 
     def test_invalidate_area(self):
         p, c1 = self.sample_canvas()[0:2]
         p.add_child(c1)
         p._dirty = False
-        p._update = []
+        p._update.clear()
         c1._dirty = False
-        c1._update = []
+        c1._update.clear()
         c1.invalidate_area((0, 0, 5, 5))
         assert c1.is_dirty
         assert p.is_dirty
-        assert c1._update == [(0, 0, 5, 5)]
+        assert p._update == set([(0, 0, 5, 5)])
 
 
 def test_shard_body_row():

@@ -60,7 +60,7 @@ class Canvas(object):
         self._childs = []
         self._parent = None
         self._area = Rectangle(left, top, cols, rows)
-        self._update = [] # areas to update
+        self._update = set() # areas to update
         self._visible = False
         #self._dirty = True
         self.invalidate()
@@ -77,8 +77,8 @@ class Canvas(object):
     def add_child(self, child):
         child._parent = self
         if child._update:
-            self._update.extend(child._update)
-            child._update = []
+            self._update.update(child._update)
+            child._update.clear()
         self._childs.append(child)
         self.invalidate_area(child._area)
 
@@ -156,7 +156,7 @@ class Canvas(object):
             self._parent.invalidate_area(area)
         else:
             log.debug("%s::invalidate_area(%r)", repr(self), area)
-            self._update.append(area)
+            self._update.add(area)
         self._set_dirty()
 
     def invalidate(self):
@@ -205,7 +205,7 @@ class Canvas(object):
                     updates = u
                 else:
                     updates = updates.union(u)
-            self._update = []
+            self._update.clear()
             updates = updates._replace(x=max(updates.x, self._area.x),
                                        y=max(updates.y, self._area.y),
                                        width=min(updates.width, self._area.width),
