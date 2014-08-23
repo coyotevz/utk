@@ -167,13 +167,13 @@ class Signal(SignalBase):
         default_cb como None(default): en este caso es obligatorio especificar
             un namespace que contengla la definicion del callback con el nombre
             de la forma: do_<signal_name>, este nombre es automaticamente
-            buscado por la señal armandolo en funcion del 'prefix'+'name' que
+            buscado por la seÃ±al armandolo en funcion del 'prefix'+'name' que
             le pasemos. El nombre es nomalizado '-' -> '_'.
 
         default_cb como False: este es el caso menos utilizado, namespace no
-            se utiliza, no se tendrá un default_callback asociado, para que la 
-            señal sea útil se tendran que conectar los callbacks con los 
-            métodos connect() o connect_after().
+            se utiliza, no se tendrÃ¡ un default_callback asociado, para que la 
+            seÃ±al sea Ãºtil se tendran que conectar los callbacks con los 
+            mÃ©todos connect() o connect_after().
         """
         self._namespace = None
         self._default_cb_name = None
