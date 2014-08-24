@@ -217,7 +217,7 @@ class Signal(SignalBase):
         if self._default_cb is None and self._default_cb_name:
             self._default_cb = self._get_default_cb()
 
-        super(Signal, self).emit(*args)
+        return super(Signal, self).emit(*args)
 
     def _get_default_cb(self):
         assert self._namespace, "i don't know where to find default callback"
@@ -248,6 +248,7 @@ def _install(signal, override=False):
     cls = signal._namespace
 
     _signals = getattr(cls, '_signals', {})
+    _have_signals = not not _signals
 
     if not override:
         assert not _signals.has_key(sig_name),\
@@ -256,6 +257,8 @@ def _install(signal, override=False):
     _signals.update({sig_name: signal})
 
     setattr(cls, '_signals', _signals)
+    if not _have_signals:
+        _install_signal_api(cls)
 
 def install_signal(cls, sig_name, default_cb=None, flag=SIGNAL_RUN_LAST,\
                    override=False):
@@ -323,39 +326,34 @@ def signal_list_names(obj):
         raise ValueError("no signaled object")
 
 class SignaledMetaType(type):
-    def __init__(cls, name, bases, namespace):
-        _signals_decl = namespace.get('__signals__', {})
+
+    def __new__(cls, name, bases, namespace):
+        _signals_decls = namespace.get('__signals__', {})
         _signals_base = {}
         for base in reversed(bases):
             if hasattr(base, '__signals__'):
                 _signals_base.update(base.__signals__)
-        _signals_base.update(_signals_decl)
-        setattr(cls, '__signals__', _signals_base)
-        type.__init__(cls, name, bases, namespace)
+        _signals_base.update(_signals_decls)
+        namespace['__signals__'] = _signals_base
+        return type.__new__(cls, name, bases, namespace)
 
-    # FIXME: Verificar que no estamos haciendo algo dos veces...
     def __call__(cls, *args, **kw):
-        obj = cls.__new__(cls, *args, **kw)
-        _signals_decl = getattr(cls, '__signals__', {})
+        _signals_decls = getattr(cls, '__signals__', {})
+        for sig_name, conf in _signals_decls.iteritems():
+            conf = _get_signal_configuration(conf)
+            install_signal(cls=cls,
+                           sig_name=sig_name,
+                           default_cb=conf['handler'],
+                           flag=conf['flag'],
+                           override=conf['override'])
+        if not '_has_signal_api' in cls.__dict__:
+            _install_signal_api(cls)
 
-        if _signals_decl and isinstance(_signals_decl, dict):
-            delattr(cls, '__signals__')
-            for sig_name, conf in _signals_decl.iteritems():
-                conf = _get_signal_configuration(conf)
-                install_signal(cls=obj,
-                               sig_name=sig_name,
-                               default_cb=conf['handler'],
-                               flag=conf['flag'],
-                               override=conf['override'])
-            setattr(cls, '__signals__', _signals_decl)
-        elif _signals_decl:  # not dict --> malformed
-            raise TypeError("__signals__ must be a dict object")
+        return super(SignaledMetaType, cls).__call__(*args, **kw)
 
-        cls.__init__(obj, *args, **kw)
-        return obj
-
-class SignaledObject(object):
-    __metaclass__ = SignaledMetaType
+def _install_signal_api(cls):
+    if '_has_signal_api' in cls.__dict__:
+        return
 
     # Utility func
     def _get_and_assert(self, sig_name):
@@ -365,29 +363,29 @@ class SignaledObject(object):
 
     # Signal API
     def emit(self, detailed_signal, *data):
-        signal = self._get_and_assert(detailed_signal)
-        signal.emit(*data) # FIXME: data would have to be a Event object?
+        signal = _get_and_assert(self, detailed_signal)
+        signal.emit(self, *data) # FIXME: data would have to be a Event object?
                       # ans: only for event signals, like "button-press-event"
         # Implement propagation mechanisms
 
     def stop_emission(self, detailed_signal):
-        signal = self._get_and_assert(detailed_signal)
+        signal = _get_and_assert(self, detailed_signal)
         signal.stop_emission()
 
     def connect(self, detailed_signal, callback, *extra_data):
-        signal = self._get_and_assert(detailed_signal)
+        signal = _get_and_assert(self, detailed_signal)
         signal.connect(callback) # FIXME: que hacemos con extra_data ??
 
     def connect_after(self, detailed_signal, callback, *extra_data):
-        signal = self._get_and_assert(detailed_signal)
+        signal = _get_and_assert(self, detailed_signal)
         signal.connect_after(callback) # FIXME: idem anterior
 
     def disconnect(self, detailed_signal, callback):
-        signal = self._get_and_assert(detailed_signal)
+        signal = _get_and_assert(self, detailed_signal)
         signal.disconnect(callback)
 
     def disconnect_after(self, detailed_signal, callback):
-        signal = self._get_and_assert(detailed_signal)
+        signal = _get_and_assert(self, detailed_signal)
         signal.disconnect_after(callback)
 
     def handler_block(self, callback=None):
@@ -396,81 +394,13 @@ class SignaledObject(object):
     def handler_unblock(self, callback=None):
         pass
 
-###############################################################################
+    _decls = locals()
+    _api = ["emit", "stop_emission", "connect", "connect_after", "disconnect",
+            "disconnect_after", "handler_block", "handler_unblock" ]
 
-# FIXME: move this to test file
-if __name__ == '__main__':
-    # Test code
-    import pprint
-    print "Testing...\n"
+    for method in _api:
+        setattr(cls, method, _decls[method])
+    setattr(cls, '_has_signal_api', True)
 
-    class Car(object):
-        def __init__(self):
-            self.start_signal = Signal("engine-started", namespace=self)
-        def start(self):
-            self.start_signal.emit("OK")
-        def do_engine_started(self, msg):
-            print "Engine started: %s, on %s" % (msg, self.__class__.__name__)
-
-    class StandardCar(Car):
-        # override handler
-        def do_engine_started(self, msg):
-            print "Engine started: %s, on standard %s" % (msg, \
-                    self.__class__.__name__)
-
-    class LuxuryCar(Car):
-        def __init__(self):
-            super(LuxuryCar, self).__init__()
-            self.stop_signal = Signal("engine-stoped", namespace=self)
-        def stop(self):
-            self.stop_signal.emit(":-(")
-        def do_engine_stoped(self, msg):
-            print "Engine stoped: %s, on %s" % (msg, self.__class__.__name__)
-
-    # ok, do things with cars
-    car = Car()
-    s_car = StandardCar()
-    l_car = LuxuryCar()
-
-    car.start()
-    s_car.start()
-    l_car.start()
-
-    # only on luxury
-    l_car.stop()
-
-    # Meta class Test
-    class SignaledObjectMetaTest(object):
-        __metaclass__ = SignaledObjectMetaType
-        __signals__ = {'engine-started': None}
-        def dump(self): pprint.pprint(self._signals)
-        def do_engine_started(self):
-            print "Engine started..."
-
-    class SignaledObjectInheritanceTest(SignaledObjectMetaTest):
-        __signals__ = {'engine-stoped': None}
-        def __init__(self, name):
-            self.name = name
-        def do_engine_stoped(self):
-            print "Engine stoped..."
-
-    class SignalTest(SignaledObjectInheritanceTest):
-        __signals__ = {'show': None}
-        # Esto tiene que fallar
-
-    test1 = SignaledObjectMetaTest()
-    test2 = SignaledObjectInheritanceTest("test2")
-    test3 = SignalTest("test3")
-    print "\nClass created:"
-    print signal_list_names(SignalTest)
-    print "Objects created:"
-    print signal_list_names(test3)
-    print
-    print dir(test1)
-    test1.dump()
-    print
-    print dir(test2)
-    test2.dump()
-    print
-    print dir(test3)
-    test3.dump()
+class SignaledObject(object):
+    __metaclass__ = SignaledMetaType
