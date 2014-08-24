@@ -85,3 +85,20 @@ class TestSignalBase(object):
         assert default_cb.called
         assert emit_t1.called
         assert default_cb.order_count < emit_t1.order_count
+
+    def test_stop_emission(self):
+        s = SignalBase('s')
+        emit_t1 = SignalEmitCallback('emit_t1')
+        emit_t2 = SignalEmitCallback('emit_t2')
+
+        def stop(*args):
+            s.stop_emission()
+
+        s.connect(emit_t1)
+        s.connect(stop)
+        s.connect(emit_t2)
+
+        s.emit()
+
+        assert emit_t1.called
+        assert not emit_t2.called
