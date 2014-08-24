@@ -71,7 +71,7 @@ class SignalBase(object):
         "Disconnect signal callback connected via connect method"
         self._callbacks.remove(callback)
 
-    def disconnect_after(self, callbacks):
+    def disconnect_after(self, callback):
         "Disconnect signal callback connected via connect_after method"
         self._callbacks_after.remove(callback)
 
@@ -112,7 +112,8 @@ class SignalBase(object):
         self._stop = False
         retval = None
 
-        if self._default_cb and self._flag is SIGNAL_RUN_FIRST:
+        if self._default_cb and self._flag is SIGNAL_RUN_FIRST and\
+                not self._default_cb_blocked:
             stop = self._default_cb(*args)
 
         for cb in self._callbacks:
@@ -122,7 +123,8 @@ class SignalBase(object):
             else:
                 break
 
-        if self._default_cb and not self._stop and self._flag is SIGNAL_RUN_LAST:
+        if self._default_cb and not self._stop and self._flag is SIGNAL_RUN_LAST and\
+                not self._default_cb_blocked:
             retval = self._default_cb(*args)
 
         for cb_after in self._callbacks_after:
