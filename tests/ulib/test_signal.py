@@ -3,7 +3,18 @@
 from tests.callback import SignalEmitCallback
 
 from utk.ulib import SIGNAL_RUN_FIRST, SIGNAL_RUN_LAST
+from utk.ulib.signal import _norm, _unnorm
 from utk.ulib.signal import SignalBase
+
+def test_norm():
+    assert _norm('abc-def') == 'abc_def'
+    assert _norm('-def') == '_def'
+    assert _norm('abc-') == 'abc_'
+
+def test_unnorm():
+    assert _unnorm('abc_def') == 'abc-def'
+    assert _unnorm('_def') == '-def'
+    assert _unnorm('abc_') == 'abc-'
 
 class TestSignalBase(object):
 
