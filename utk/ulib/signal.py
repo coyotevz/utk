@@ -355,6 +355,7 @@ def _get_signal_configuration(configuration):
             else:
                 raise ValueError("_get_signal_configuration can't handle '%s'"
                                  % elem)
+
     elif isinstance(configuration, (str, int)):
         if configuration in range(2):
             conf['flag'] = configuration
@@ -415,6 +416,8 @@ class SignaledMetaType(type):
             setattr(cls, '__signals__', _signals_decl)
         elif _signals_decl:  # not dict --> malformed
             raise TypeError("__signals__ must be a dict object")
+        else:
+            _install_signal_api(cls)
 
         cls.__init__(obj, *args, **kw)
         return obj

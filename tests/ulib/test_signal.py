@@ -5,7 +5,7 @@ from tests.callback import SignalEmitCallback
 
 from utk.ulib import SIGNAL_RUN_FIRST, SIGNAL_RUN_LAST
 from utk.ulib.signal import _norm, _unnorm
-from utk.ulib.signal import SignalBase, Signal, install_signal
+from utk.ulib.signal import SignalBase, Signal, SignaledObject, install_signal
 
 def test_norm():
     assert _norm('abc-def') == 'abc_def'
@@ -266,6 +266,7 @@ class TestSignal(object):
         r.test_signal.emit()
         assert r.called == 'called'
 
+
 class TestInstallSignal(object):
 
     _api = ["emit", "stop_emission", "connect", "connect_after", "disconnect",
@@ -284,3 +285,37 @@ class TestInstallSignal(object):
         install_signal(a, 'test-signal', None)
         for h in self._api:
             assert hasattr(a, h) and callable(getattr(a, h))
+
+    def test_install_and_emit(self):
+        class A(object): pass
+        cb_1 = SignalEmitCallback('cb_1')
+        cb_2 = SignalEmitCallback('cb_2')
+        install_signal(A, 'test-signal', cb_1)
+        a = A()
+        a.connect('test-signal', cb_2)
+        a.emit('test-signal')
+        assert cb_1.called
+        assert cb_2.called
+
+
+class TestSignaledObject(object):
+
+    def test_signal_decl(self):
+        class T1(SignaledObject):
+            __signals__ = { 'test-signal': None }
+            called = False
+            def do_test_signal(self, *args):
+                self.called = True
+        t1 = T1()
+        cb_1 = SignalEmitCallback('cb_1')
+        t1.connect('test-signal', cb_1)
+        t1.emit('test-signal')
+        assert t1.called == True
+        assert cb_1.called == True
+
+    def test_empty_signal(self):
+        class T1(SignaledObject):
+            pass
+        t1 = T1()
+        for h in TestInstallSignal._api:
+            assert hasattr(t1, h) and callable(getattr(t1, h))
