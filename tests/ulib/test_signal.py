@@ -5,7 +5,7 @@ from tests.callback import SignalEmitCallback
 
 from utk.ulib import SIGNAL_RUN_FIRST, SIGNAL_RUN_LAST
 from utk.ulib.signal import _norm, _unnorm
-from utk.ulib.signal import SignalBase, Signal
+from utk.ulib.signal import SignalBase, Signal, install_signal
 
 def test_norm():
     assert _norm('abc-def') == 'abc_def'
@@ -266,3 +266,21 @@ class TestSignal(object):
         r.test_signal.emit()
         assert r.called == 'called'
 
+class TestInstallSignal(object):
+
+    _api = ["emit", "stop_emission", "connect", "connect_after", "disconnect",
+            "disconnect_after", "handler_block", "handler_unblock" ]
+
+    def test_install_api_class(self):
+        class A(object): pass
+        install_signal(A, 'test-signal', None)
+        a = A()
+        for h in self._api:
+            assert hasattr(a, h) and callable(getattr(a, h))
+
+    def test_install_api_object(self):
+        class A(object): pass
+        a = A()
+        install_signal(a, 'test-signal', None)
+        for h in self._api:
+            assert hasattr(a, h) and callable(getattr(a, h))

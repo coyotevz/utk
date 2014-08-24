@@ -283,19 +283,14 @@ def _install_signal_api(obj):
         signal = _get_and_assert(self, detailed_signal)
         signal.disconnect_after(callback)
 
-    def handler_is_connected(self, detailed_signal, callback):
-        pass
-
     def handler_block(self, callback=None):
         pass
 
     def handler_unblock(self, callback=None):
         pass
 
-    _api = ["emit", "stop_emission", \
-            "connect", "connect_after",\
-            "disconnect", "disconnect_after", \
-            "handler_is_connected", "handler_block", "handler_unblock" ]
+    _api = ["emit", "stop_emission", "connect", "connect_after", "disconnect",
+            "disconnect_after", "handler_block", "handler_unblock" ]
 
     _declared = locals()
 
@@ -323,8 +318,6 @@ def _install(signal, override=False):
     _signals.update({sig_name: signal})
 
     setattr(cls, '_signals', _signals)
-
-    #print dir(cls)
 
     if not _have_signals:
         _install_signal_api(cls)
@@ -393,7 +386,7 @@ def signal_list_names(obj):
     else:
         raise ValueError("no signaled object")
 
-class SignaledObjectMetaType(type):
+class SignaledMetaType(type):
     def __init__(cls, name, bases, namespace):
         _signals_decl = namespace.get('__signals__', {})
         _signals_base = {}
@@ -427,8 +420,7 @@ class SignaledObjectMetaType(type):
         return obj
 
 class SignaledObject(object):
-    __metaclass__ = SignaledObjectMetaType
-    pass
+    __metaclass__ = SignaledMetaType
 
 ###############################################################################
 
