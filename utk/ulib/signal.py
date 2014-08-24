@@ -97,6 +97,9 @@ class SignalBase(object):
             return callback in self._blockeds
         return self._default_cb_blocked
 
+    def stop_emission(self):
+        self._stop = True
+
     def emit(self, *args):
         """
         Emit signal. It run the callbacks connected with args in this order:
@@ -106,28 +109,29 @@ class SignalBase(object):
             - callbacks connected by connect_after() method
         """
 
-        stop = None
+        self._stop = False
+        retval = None
 
         if self._default_cb and self._flag is SIGNAL_RUN_FIRST:
             stop = self._default_cb(*args)
 
         for cb in self._callbacks:
-            if not stop:
+            if not self._stop:
                 if not cb in self._blockeds:
-                    stop = cb(*args)
+                    retval = cb(*args)
             else:
                 break
 
-        if self._default_cb and not stop and self._flag is SIGNAL_RUN_LAST:
-            stop = self._default_cb(*args)
+        if self._default_cb and not self._stop and self._flag is SIGNAL_RUN_LAST:
+            retval = self._default_cb(*args)
 
         for cb_after in self._callbacks_after:
-            if not stop:
+            if not self._stop:
                 if not cb_after in self._blockeds:
-                    stop = cb_after(*args)
+                    retval = cb_after(*args)
             else:
                 break
-        return stop
+        return retval
 
 class Signal(SignalBase):
     """
@@ -254,8 +258,9 @@ def _install_signal_api(obj):
                       # ans: only for event signals, like "button-press-event"
         # Implement propagation mechanisms
    
-    def stop_emision(self, detailed_signal):
-        pass
+    def stop_emission(self, detailed_signal):
+        signal = _get_and_assert(self, detailed_signal)
+        signal.stop_emission()
 
     def connect(self, detailed_signal, callback, *extra_data):
     #    print "self:", self
@@ -285,7 +290,7 @@ def _install_signal_api(obj):
     def handler_unblock(self, callback=None):
         pass
 
-    _api = ["emit", "stop_emision", \
+    _api = ["emit", "stop_emission", \
             "connect", "connect_after",\
             "disconnect", "disconnect_after", \
             "handler_is_connected", "handler_block", "handler_unblock" ]

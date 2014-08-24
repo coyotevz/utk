@@ -13,6 +13,8 @@ class NotifyPropCallback(object):
 
 class SignalEmitCallback(object):
 
+    order_count = 0
+
     def __init__(self, signal=None):
         self.signal = signal
         self.called = False
@@ -21,4 +23,6 @@ class SignalEmitCallback(object):
         self.called = True
         self.data = data
         self.args = args
+        self.order_count = SignalEmitCallback.order_count
+        SignalEmitCallback.order_count += 1
         return True
