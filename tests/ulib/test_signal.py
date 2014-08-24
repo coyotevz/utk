@@ -270,14 +270,57 @@ class TestSignal(object):
 class TestSignaledObject(object):
 
     def test_signal_decl(self):
-        class T1(SignaledObject):
+        class T(SignaledObject):
+            __signals__ = { 'test-signal': None }
+        t = T()
+        assert hasattr(t, '_signals')
+        assert 'test-signal' in t._signals
+
+    def test_signal_wo_cb_raises(self):
+        class T(SignaledObject):
+            __signals__ = { 'test-signal': None }
+        t = T()
+        with pytest.raises(AttributeError):
+            t.emit('test-signal')
+        cb_1 = lambda x:x
+        t.connect('test-signal', cb_1)
+        with pytest.raises(AttributeError):
+            t.emit('test-signal')
+
+    def test_signal_emission(self):
+        class T(SignaledObject):
             __signals__ = { 'test-signal': None }
             called = False
             def do_test_signal(self, *args):
                 self.called = True
-        t1 = T1()
+        t = T()
         cb_1 = SignalEmitCallback('cb_1')
+        t.connect('test-signal', cb_1)
+        t.emit('test-signal')
+        assert t.called == True
+        assert cb_1.called == True
+
+    def test_individual_signals(self):
+        class T(SignaledObject):
+            __signals__ = {'test-signal': None}
+            called = False
+            def do_test_signal(self, *args):
+                self.called = True
+        t1 = T()
+        t2 = T()
+        cb_1 = SignalEmitCallback('cb_1')
+        cb_2 = SignalEmitCallback('cb_2')
         t1.connect('test-signal', cb_1)
+        t2.connect('test-signal', cb_2)
         t1.emit('test-signal')
         assert t1.called == True
         assert cb_1.called == True
+        assert t2.called == False
+        assert cb_2.called == False
+        t1.called = False
+        cb_1.called = False
+        t2.emit('test-signal')
+        assert t1.called == False
+        assert cb_1.called == False
+        assert t2.called == True
+        assert cb_2.called == True
