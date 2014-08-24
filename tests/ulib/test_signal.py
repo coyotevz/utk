@@ -267,37 +267,6 @@ class TestSignal(object):
         assert r.called == 'called'
 
 
-class TestInstallSignal(object):
-
-    _api = ["emit", "stop_emission", "connect", "connect_after", "disconnect",
-            "disconnect_after", "handler_block", "handler_unblock" ]
-
-    def test_install_api_class(self):
-        class A(object): pass
-        install_signal(A, 'test-signal', None)
-        a = A()
-        for h in self._api:
-            assert hasattr(a, h) and callable(getattr(a, h))
-
-    def test_install_api_object(self):
-        class A(object): pass
-        a = A()
-        install_signal(a, 'test-signal', None)
-        for h in self._api:
-            assert hasattr(a, h) and callable(getattr(a, h))
-
-    def test_install_and_emit(self):
-        class A(object): pass
-        cb_1 = SignalEmitCallback('cb_1')
-        cb_2 = SignalEmitCallback('cb_2')
-        install_signal(A, 'test-signal', cb_1)
-        a = A()
-        a.connect('test-signal', cb_2)
-        a.emit('test-signal')
-        assert cb_1.called
-        assert cb_2.called
-
-
 class TestSignaledObject(object):
 
     def test_signal_decl(self):
@@ -312,10 +281,3 @@ class TestSignaledObject(object):
         t1.emit('test-signal')
         assert t1.called == True
         assert cb_1.called == True
-
-    def test_empty_signal(self):
-        class T1(SignaledObject):
-            pass
-        t1 = T1()
-        for h in TestInstallSignal._api:
-            assert hasattr(t1, h) and callable(getattr(t1, h))

@@ -220,20 +220,13 @@ class Signal(SignalBase):
         return super(Signal, self).emit(*args)
 
     def _get_default_cb(self):
-        assert self._namespace or self._bounded_obj, "i don't know where to find default callback"
+        assert self._namespace, "i don't know where to find default callback"
 
-        ns = self._bounded_obj if hasattr(self, '_bounded_obj') else self._namespace
-
-        if isinstance(ns, dict):
-            _getter = dict.get
-        else:
-            _getter = getattr
-
-        default_cb = _getter(ns, self._default_cb_name)
+        default_cb = getattr(self._namespace, self._default_cb_name, None)
 
         if default_cb is None:
             raise AttributeError("%s object has no attribute '%s'"\
-                                 % (ns, self._default_cb_name))
+                    % (self._namespace, self._default_cb_name))
 
         assert callable(default_cb),\
                 "'%s' attribute must be callable" % self._default_cb_name
@@ -247,35 +240,31 @@ class Signal(SignalBase):
 
 def _install(signal, override=False):
     sig_name = signal.name
-    cls = signal._namespace
+    obj = signal._namespace
 
-    _signals = getattr(cls, '_signals', {})
-    _have_signals = not not _signals
+    _signals = getattr(obj, '_signals', {})
 
     if not override:
         assert not _signals.has_key(sig_name),\
-            "The %s already has a signal named '%s'" % (cls.__name__, signame)
+            "The %s already has a signal named '%s'" % (obj.__class__.__name__, signame)
 
     _signals.update({sig_name: signal})
 
-    setattr(cls, '_signals', _signals)
-    if not _have_signals:
-        _install_signal_api(cls)
+    setattr(obj, '_signals', _signals)
 
-def install_signal(cls, sig_name, default_cb=None, flag=SIGNAL_RUN_LAST,\
+def install_signal(obj, sig_name, default_cb=None, flag=SIGNAL_RUN_LAST,
                    override=False):
     
-    assert type(cls) is ClassType or \
-           isinstance(cls.__class__, type),\
-            "'cls' must be a class or instance (%s received)" % type(cls)
+    assert isinstance(obj.__class__, type),\
+            "'obj' must be an instance (%s received)" % type(obj)
 
     if isinstance(default_cb, basestring):
-        default_ = getattr(cls, "%s" % default_cb, None)
+        default_ = getattr(obj, "%s" % default_cb, None)
         assert default_ and callable(default_), "You set '%s' as default "\
                 "callback name but i can't find any callable with this name "\
-                "in %s" % (default_cb, cls.__name__)
+                "in %s instance" % (default_cb, obj.__clas__.__name__)
 
-    _install(Signal(sig_name, default_cb, cls, flag), override)
+    _install(Signal(sig_name, default_cb, obj, flag), override)
 
 def _get_signal_configuration(configuration):
     conf = dict()
@@ -341,28 +330,27 @@ class SignaledMetaType(type):
 
     def __call__(cls, *args, **kw):
         _signals_decls = getattr(cls, '__signals__', {})
+        obj = type.__call__(cls, *args, **kw)
+
         for sig_name, conf in _signals_decls.iteritems():
             conf = _get_signal_configuration(conf)
-            install_signal(cls=cls,
+            install_signal(obj=obj,
                            sig_name=sig_name,
                            default_cb=conf['handler'],
                            flag=conf['flag'],
                            override=conf['override'])
-        if not '_has_signal_api' in cls.__dict__:
-            _install_signal_api(cls)
 
-        return super(SignaledMetaType, cls).__call__(*args, **kw)
+        return obj
 
-def _install_signal_api(cls):
-    if '_has_signal_api' in cls.__dict__:
-        return
+# Utility func
+def _get_and_assert(self, sig_name):
+    sig = self._signals.get(sig_name)
+    if not sig:
+        raise TypeError("unknown signal name: %s" % sig_name)
+    return sig
 
-    # Utility func
-    def _get_and_assert(self, sig_name):
-        sig = self._signals.get(sig_name)
-        if not sig: raise TypeError("unknown signal name: %s" % sig_name)
-        sig._bounded_obj = self
-        return sig
+class SignaledObject(object):
+    __metaclass__ = SignaledMetaType
 
     # Signal API
     def emit(self, detailed_signal, *data):
@@ -396,14 +384,3 @@ def _install_signal_api(cls):
 
     def handler_unblock(self, callback=None):
         pass
-
-    _decls = locals()
-    _api = ["emit", "stop_emission", "connect", "connect_after", "disconnect",
-            "disconnect_after", "handler_block", "handler_unblock" ]
-
-    for method in _api:
-        setattr(cls, method, _decls[method])
-    setattr(cls, '_has_signal_api', True)
-
-class SignaledObject(object):
-    __metaclass__ = SignaledMetaType
