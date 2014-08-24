@@ -243,73 +243,11 @@ class Signal(SignalBase):
 
         return default_cb
 
-## TODO: write signal and api attacher
-def _install_signal_api(obj):
-    "This function installs API for signal support on 'obj'"
-
-    # Utility func
-    def _get_and_assert(self, sig_name):
-        sig = self._signals.get(sig_name)
-        if not sig: raise TypeError("unknown signal name: %s" % sig_name)
-        return sig
-
-    # Signal API
-    def emit(self, detailed_signal, *data):
-        signal = _get_and_assert(self, detailed_signal)
-        signal.emit(*data) # FIXME: data would have to be a Event object?
-                      # ans: only for event signals, like "button-press-event"
-        # Implement propagation mechanisms
-   
-    def stop_emission(self, detailed_signal):
-        signal = _get_and_assert(self, detailed_signal)
-        signal.stop_emission()
-
-    def connect(self, detailed_signal, callback, *extra_data):
-    #    print "self:", self
-    #    print "detailed_signal:", detailed_signal
-    #    print "callback:", callback
-        signal = _get_and_assert(self, detailed_signal)
-        signal.connect(callback) # FIXME: que hacemos con extra_data ??
-
-    def connect_after(self, detailed_signal, callback, *extra_data):
-        signal = _get_and_assert(self, detailed_signal)
-        signal.connect_after(callback) # FIXME: idem anterior
-
-    def disconnect(self, detailed_signal, callback):
-        signal = _get_and_assert(self, detailed_signal)
-        signal.disconnect(callback)
-
-    def disconnect_after(self, detailed_signal, callback):
-        signal = _get_and_assert(self, detailed_signal)
-        signal.disconnect_after(callback)
-
-    def handler_block(self, callback=None):
-        pass
-
-    def handler_unblock(self, callback=None):
-        pass
-
-    _api = ["emit", "stop_emission", "connect", "connect_after", "disconnect",
-            "disconnect_after", "handler_block", "handler_unblock" ]
-
-    _declared = locals()
-
-    if type(obj) in (type, ClassType):
-        final_obj = obj
-    elif type(obj) is InstanceType or isinstance(obj.__class__, type):
-        final_obj = obj.__class__
-    else:
-        raise TypeError("i don't know to do with this object: %s" % type(obj))
-    
-    for func_name in _api:
-        setattr(final_obj, func_name, _declared[func_name])
-
 def _install(signal, override=False):
     sig_name = signal.name
     cls = signal._namespace
 
     _signals = getattr(cls, '_signals', {})
-    _have_signals = not not _signals
 
     if not override:
         assert not _signals.has_key(sig_name),\
@@ -318,9 +256,6 @@ def _install(signal, override=False):
     _signals.update({sig_name: signal})
 
     setattr(cls, '_signals', _signals)
-
-    if not _have_signals:
-        _install_signal_api(cls)
 
 def install_signal(cls, sig_name, default_cb=None, flag=SIGNAL_RUN_LAST,\
                    override=False):
@@ -395,7 +330,6 @@ class SignaledMetaType(type):
             if hasattr(base, '__signals__'):
                 _signals_base.update(base.__signals__)
         _signals_base.update(_signals_decl)
-        #namespace['__signals__'] = _signals_base
         setattr(cls, '__signals__', _signals_base)
         type.__init__(cls, name, bases, namespace)
 
@@ -416,14 +350,51 @@ class SignaledMetaType(type):
             setattr(cls, '__signals__', _signals_decl)
         elif _signals_decl:  # not dict --> malformed
             raise TypeError("__signals__ must be a dict object")
-        else:
-            _install_signal_api(cls)
 
         cls.__init__(obj, *args, **kw)
         return obj
 
 class SignaledObject(object):
     __metaclass__ = SignaledMetaType
+
+    # Utility func
+    def _get_and_assert(self, sig_name):
+        sig = self._signals.get(sig_name)
+        if not sig: raise TypeError("unknown signal name: %s" % sig_name)
+        return sig
+
+    # Signal API
+    def emit(self, detailed_signal, *data):
+        signal = self._get_and_assert(detailed_signal)
+        signal.emit(*data) # FIXME: data would have to be a Event object?
+                      # ans: only for event signals, like "button-press-event"
+        # Implement propagation mechanisms
+
+    def stop_emission(self, detailed_signal):
+        signal = self._get_and_assert(detailed_signal)
+        signal.stop_emission()
+
+    def connect(self, detailed_signal, callback, *extra_data):
+        signal = self._get_and_assert(detailed_signal)
+        signal.connect(callback) # FIXME: que hacemos con extra_data ??
+
+    def connect_after(self, detailed_signal, callback, *extra_data):
+        signal = self._get_and_assert(detailed_signal)
+        signal.connect_after(callback) # FIXME: idem anterior
+
+    def disconnect(self, detailed_signal, callback):
+        signal = self._get_and_assert(detailed_signal)
+        signal.disconnect(callback)
+
+    def disconnect_after(self, detailed_signal, callback):
+        signal = self._get_and_assert(detailed_signal)
+        signal.disconnect_after(callback)
+
+    def handler_block(self, callback=None):
+        pass
+
+    def handler_unblock(self, callback=None):
+        pass
 
 ###############################################################################
 
