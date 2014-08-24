@@ -220,26 +220,28 @@ class Signal(SignalBase):
         return super(Signal, self).emit(*args)
 
     def _get_default_cb(self):
-        assert self._namespace, "i don't know where to find default callback"
+        assert self._namespace or self._bounded_obj, "i don't know where to find default callback"
 
-        if isinstance(self._namespace, dict):
+        ns = self._bounded_obj if hasattr(self, '_bounded_obj') else self._namespace
+
+        if isinstance(ns, dict):
             _getter = dict.get
         else:
             _getter = getattr
 
-        default_cb = _getter(self._namespace, self._default_cb_name)
+        default_cb = _getter(ns, self._default_cb_name)
 
         if default_cb is None:
             raise AttributeError("%s object has no attribute '%s'"\
-                    % (namespace.__name__, self._default_cb_name))
+                                 % (ns, self._default_cb_name))
 
         assert callable(default_cb),\
                 "'%s' attribute must be callable" % self._default_cb_name
 
-#        if not _bounded(default_cb):
-#            print default_cb
-#            raise TypeError("%s callable must be a bound method "\
-#                "(received an unbound method)" % self._default_cb_name)
+        #if not _bounded(default_cb):
+        #    print default_cb
+        #    raise TypeError("%s callable must be a bound method "\
+        #        "(received an unbound method)" % self._default_cb_name)
 
         return default_cb
 
@@ -359,12 +361,13 @@ def _install_signal_api(cls):
     def _get_and_assert(self, sig_name):
         sig = self._signals.get(sig_name)
         if not sig: raise TypeError("unknown signal name: %s" % sig_name)
+        sig._bounded_obj = self
         return sig
 
     # Signal API
     def emit(self, detailed_signal, *data):
         signal = _get_and_assert(self, detailed_signal)
-        signal.emit(self, *data) # FIXME: data would have to be a Event object?
+        signal.emit(*data) # FIXME: data would have to be a Event object?
                       # ans: only for event signals, like "button-press-event"
         # Implement propagation mechanisms
 
