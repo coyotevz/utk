@@ -18,6 +18,9 @@ from utk.box import VBox, HBox
 from utk.window import Window
 from utk.screen import get_default_screen
 
+# version information
+__version__ = '0.0.1'
+
 _running_from_pytest = False
 
 main_loops = []
