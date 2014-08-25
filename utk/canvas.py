@@ -183,8 +183,8 @@ class Canvas(object):
         return self._shards
 
     def calculate_shards(self):
-        #if not self.is_dirty:
-        #    return
+        if not self.is_dirty:
+            return
 
         log.debug("calculating shards in %s <%x>", repr(self), id(self))
 
@@ -199,7 +199,7 @@ class Canvas(object):
         updates = None
         if self._update:
             import pprint
-            pprint.pprint(self._update)
+            log.debug(pprint.pformat(self._update))
             for u in self._update:
                 if not updates:
                     updates = u
@@ -210,7 +210,7 @@ class Canvas(object):
                                        y=max(updates.y, self._area.y),
                                        width=min(updates.width, self._area.width),
                                        height=min(updates.height, self._area.height))
-            print "updates for '%s': %r" % (self._text, updates,)
+            log.debug("updates for '%s': %r", self._text, updates,)
         else:
             updates = self._area
 
@@ -250,7 +250,7 @@ class Canvas(object):
                 middle_shards = child.shards
 
             self._shards = top_shards + middle_shards + bottom_shards
-#        self._unset_dirty()
+        self._unset_dirty()
 
     def content(self):
         shard_tail = []
@@ -323,7 +323,7 @@ class TextCanvas(Canvas):
 
     def body_content(self, trim_left=0, trim_top=0, cols=None, rows=None,
                      attr_map=None):
-        print "body_content for %s" % self
+        log.debug("body_content for %s", self)
         if cols is None:
             cols = self.cols - trim_left
         if rows is None:
@@ -473,8 +473,8 @@ def shard_body(cviews, shard_tail, create_iter=True, iter_default=None):
             col += cview.cols
             col_gap -= cview.cols
             if col_gap < 0:
-                print "col_gap = %d" % col_gap
-                print "body = %r" % body
+                log.debug("col_gap = %d", col_gap)
+                log.debug("body = %r", body)
                 raise CanvasError("cviews overflow gaps in shard_tail!!!")
             if create_iter and cview.canv:
                 new_iter = cview.content()
