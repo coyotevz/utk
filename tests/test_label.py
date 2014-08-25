@@ -25,3 +25,11 @@ class TestLabel(TestMisc):
         l.text = "test-3"
         assert on_text_notify.value == "test-3"
         assert l.text == "test-3"
+
+    def test_set_text(self):
+        l = self.widget("t")
+        on_text_notify = NotifyPropCallback("text")
+        l.connect("notify::text", on_text_notify)
+        l.set_text(l.get_text() + " t")
+        assert l.text == "t t"
+        assert on_text_notify.value == "t t"
