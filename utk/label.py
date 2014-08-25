@@ -25,8 +25,11 @@ class Label(Misc):
         """
         if text != self._text:
             self._text = text
+            if self.is_realized:
+                self.canvas._text = [self._text]
             self.notify("text")
             self.queue_resize()
+            self.queue_draw()
 
     text = property(get_text, set_text)
 
