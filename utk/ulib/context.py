@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
 
+"""
+    utk.ulib.context
+    ~~~~~~~~~~~~~~~~
+
+    MainContext iterator based on linux select function.
+    Some code lines form urwid project.
+"""
+
 import time
 import select
 import heapq
