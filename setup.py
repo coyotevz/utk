@@ -19,7 +19,7 @@ def find_packages(library_name):
 
 v_file = open(os.path.join(os.path.dirname(__file__),
                            'utk', '__init__.py'))
-VERSION = re.compile(r".*_version__ = '(.*?)'", r.S)\
+VERSION = re.compile(r".*_version__ = '(.*?)'", re.S)\
             .match(v_file.read()).group(1)
 
 setup(
@@ -29,7 +29,8 @@ setup(
   author_email = "augusto@rioplomo.com.ar",
   description = "A console toolkit with gtk api like and urwid render code",
   url = "http://github.com/coyotvz/utk",
+  platforms = 'unix-like',
   license = "LGPL",
   packages = find_packages('utk'),
-  install_requires = ['pygtk'],
+  install_requires = ['pygobject'],
 )
