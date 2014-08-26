@@ -4,14 +4,18 @@
 Direct terminal UI implementation
 """
 
-import sys
 import os
 import logging
-import fcntl
-import termios
 import struct
+import sys
 import signal
-import tty
+
+try:
+    import fcntl
+    import termios
+    import tty
+except ImportError:
+    pass # windows
 
 import utk
 from utk.screen import BaseScreen, RealTerminal, AttrSpec
@@ -100,7 +104,7 @@ class Screen(BaseScreen, RealTerminal):
             move_cursor = escape.RESTORE_NORMAL_BUFFER
 
         self._term_output_file.write(self._attrspec_to_escape(
-            AttrSpec('', '')) + escape.SI + escape.MOUSE_TRACKING_OFF +
+            AttrSpec('', '')) + escape.SI + escape.MOUSE_TRACKING_OFF + \
             escape.SHOW_CURSOR + move_cursor + "\n" + escape.SHOW_CURSOR)
         self._input_iter = self._fake_input_iter()
 
@@ -159,7 +163,7 @@ class Screen(BaseScreen, RealTerminal):
         def set_cursor_home():
             if not partial_display():
                 return escape.set_cursor_position(0, 0)
-            return (escape.CURSOR_HOME_COL + escape.move_cursor_up(cy))
+            return escape.CURSOR_HOME_COL + escape.move_cursor_up(cy)
 
         def set_cursor_row(y):
             if not partial_display():
@@ -273,6 +277,7 @@ class Screen(BaseScreen, RealTerminal):
             self._cy = y
 
         if self._resized:
+            # handle resize before trying to draw screen
             return
 
         # Write list of commands to terminal
@@ -531,7 +536,7 @@ class Screen(BaseScreen, RealTerminal):
         return escape.ESC + "[0;%s;%s%sm" % (fg, st, bg)
 
     def set_terminal_properties(self, colors=None, bright_is_bold=None,
-                               has_underline=None):
+                                has_underline=None):
         """
         colors -- number of colors terminal supports (1, 16, 88, 256)
             or None to leave unchanged
@@ -553,7 +558,7 @@ class Screen(BaseScreen, RealTerminal):
         if colors == self.colors and\
            bright_is_bold == self.bright_is_bold and\
            has_underline == self.has_underline:
-               return
+            return
 
         self.colors = colors
         self.bright_is_bold = bright_is_bold
