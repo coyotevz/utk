@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Urwid utility functions
-#    Copyright (C) 2004-2007  Ian Ward
+#    Copyright (C) 2004-2011  Ian Ward
 #
 #    This library is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,11 @@
 # Urwid web site: http://excess.org/urwid/
 
 from utk import escape
-from utk import str_util
+from utk.compat import bytes
+
+import codecs
+
+str_util = escape.str_util
 
 # bring str_util functions into our namespace
 calc_text_pos = str_util.calc_text_pos
@@ -36,11 +40,11 @@ def detect_encoding():
     import locale
     try:
         try:
-            locale.setlocale( locale.LC_ALL, "" )
+            locale.setlocale(locale.LC_ALL, "")
         except locale.Error:
             pass
         return locale.getlocale()[1] or ""
-    except ValueError, e:
+    except ValueError as e:
         # with invalid LANG value python will throw ValueError
         if e.args and e.args[0].startswith("unknown locale"):
             return ""
@@ -114,12 +118,18 @@ def apply_target_encoding( s ):
                 s = s.replace( c, escape.SO+alt+escape.SI )
 
     if type(s) == unicode:
-        s = s.replace( escape.SI+escape.SO, u"" ) # remove redundant shifts
-        s = s.encode( _target_encoding )
+        s = s.replace(escape.SI+escape.SO, u"") # remove redundant shifts
+        s = codecs.encode(s, _target_encoding, 'replace')
 
-    sis = s.split( escape.SO )
+    assert isinstance(s, bytes)
+    SO = escape.SO.encode('ascii')
+    SI = escape.SI.encode('ascii')
 
-    sis0 = sis[0].replace( escape.SI, "" )
+    sis = s.split(SO)
+
+    assert isinstance(sis[0], bytes)
+
+    sis0 = sis[0].replace(SI, bytes())
     sout = []
     cout = []
     if sis0:
@@ -130,14 +140,17 @@ def apply_target_encoding( s ):
         return sis0, cout
 
     for sn in sis[1:]:
-        sl = sn.split( escape.SI, 1 )
+        assert isinstance(sn, bytes)
+        assert isinstance(SI, bytes)
+        sl = sn.split(SI, 1)
         if len(sl) == 1:
             sin = sl[0]
+            assert isinstance(sin, bytes)
             sout.append(sin)
-            rle_append_modify(cout, (escape.DEC_TAG, len(sin)))
+            rle_append_modify(cout, (escape.DEC_TAG.encode('ascii'), len(sin)))
             continue
         sin, son = sl
-        son = son.replace( escape.SI, "" )
+        son = son.replace(SI, bytes())
         if sin:
             sout.append(sin)
             rle_append_modify(cout, (escape.DEC_TAG, len(sin)))
@@ -145,7 +158,8 @@ def apply_target_encoding( s ):
             sout.append(son)
             rle_append_modify(cout, (None, len(son)))
 
-    return "".join(sout), cout
+    outstr = bytes().join(sout)
+    return outstr, cout
 
 
 ######################################################################
@@ -213,7 +227,8 @@ def trim_text_attr_cs( text, attr, cs, start_col, end_col ):
         rle_append_modify( attrtr, (al, 1) )
         rle_append_modify( cstr, (None, 1) )
 
-    return " "*pad_left + text[spos:epos] + " "*pad_right, attrtr, cstr
+    return (bytes().rjust(pad_left) + text[spos:epos] +
+        bytes().rjust(pad_right), attrtr, cstr)
 
 
 def rle_get_at( rle, pos ):
@@ -265,13 +280,14 @@ def rle_len( rle ):
         run += r
     return run
 
-def rle_append_beginning_modify( rle, (a, r) ):
+def rle_append_beginning_modify(rle, a_r):
     """
-    Append (a, r) to BEGINNING of rle.
+    Append (a, r) (unpacked from *a_r*) to BEGINNING of rle.
     Merge with first run when possible
 
     MODIFIES rle parameter contents. Returns None.
     """
+    a, r = a_r
     if not rle:
         rle[:] = [(a, r)]
     else:
@@ -282,13 +298,14 @@ def rle_append_beginning_modify( rle, (a, r) ):
             rle[0:0] = [(al, r)]
 
 
-def rle_append_modify( rle, (a, r) ):
+def rle_append_modify(rle, a_r):
     """
-    Append (a,r) to the rle list rle.
+    Append (a, r) (unpacked from *a_r*) to the rle list rle.
     Merge with last run when possible.
 
     MODIFIES rle parameter contents. Returns None.
     """
+    a, r = a_r
     if not rle or rle[-1][0] != a:
         rle.append( (a,r) )
         return
@@ -349,13 +366,14 @@ def rle_factor( rle ):
     return rle1, rle2
 
 
-class TagMarkupException( Exception ): pass
+class TagMarkupException(Exception): pass
 
-def decompose_tagmarkup( tm ):
+def decompose_tagmarkup(tm):
     """Return (text string, attribute list) for tagmarkup passed."""
 
-    tl, al = _tagmarkup_recurse( tm, None )
-    text = "".join(tl)
+    tl, al = _tagmarkup_recurse(tm, None)
+    # join as unicode or bytes based on type of first element
+    text = tl[0][:0].join(tl)
 
     if al and al[-1][0] is None:
         del al[-1]
@@ -388,13 +406,13 @@ def _tagmarkup_recurse( tm, attr ):
     if type(tm) == tuple:
         # tuples mark a new attribute boundary
         if len(tm) != 2:
-            raise TagMarkupException, "Tuples must be in the form (attribute, tagmarkup): %r" % (tm,)
+            raise TagMarkupException("Tuples must be in the form (attribute, tagmarkup): %r" % (tm,))
 
         attr, element = tm
         return _tagmarkup_recurse( element, attr )
 
-    if not isinstance(tm,basestring):
-        raise TagMarkupException, "Invalid markup element: %r" % tm
+    if not isinstance(tm,(basestring, bytes)):
+        raise TagMarkupException("Invalid markup element: %r" % tm)
 
     # text
     return [tm], [(attr, len(tm))]
@@ -414,7 +432,7 @@ class MetaSuper(type):
     def __init__(cls, name, bases, d):
         super(MetaSuper, cls).__init__(name, bases, d)
         if hasattr(cls, "_%s__super" % name):
-            raise AttributeError, "Class has same name as one of its super classes"
+            raise AttributeError("Class has same name as one of its super classes")
         setattr(cls, "_%s__super" % name, super(cls))
 
 
@@ -422,7 +440,7 @@ class MetaSuper(type):
 def int_scale(val, val_range, out_range):
     """
     Scale val in the range [0, val_range-1] to an integer in the range
-    [0, out_range-1].  This implementaton uses the "round-half-up" rounding
+    [0, out_range-1].  This implementation uses the "round-half-up" rounding
     method.
 
     >>> "%x" % int_scale(0x7, 0x10, 0x10000)
@@ -437,4 +455,4 @@ def int_scale(val, val_range, out_range):
     num = int(val * (out_range-1) * 2 + (val_range-1))
     dem = ((val_range-1) * 2)
     # if num % dem == 0 then we are exactly half-way and have rounded up.
-    return num / dem
+    return num // dem
