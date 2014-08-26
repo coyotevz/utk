@@ -420,7 +420,11 @@ class BlankCanvas(Canvas):
         return "<BlankCanvas(cols=%d, rows=%d)>" % (self.cols, self.rows)
 
 def shard_body_row(sbody):
-    """Return one row, advancing the iterator in sbody."""
+    """
+    Return one row, advancing the iterators in sbody.
+
+    ** MODIFIES sbody by calling next() on its iterators **
+    """
     row = []
     for done_rows, content_iter, cview in sbody:
         if content_iter:
@@ -435,7 +439,9 @@ def shard_body_row(sbody):
 
 
 def shard_body_tail(num_rows, sbody):
-    """Return a new shard tail that follows this shard body."""
+    """
+    Return a new shard tail that follows this shard body.
+    """
     shard_tail = []
     col_gap = 0
     done_rows = 0
@@ -492,7 +498,9 @@ def shard_body(cviews, shard_tail, create_iter=True, iter_default=None):
 
 
 def shards_trim_top(shards, top):
-    """Return shards with top rows removed."""
+    """
+    Return shards with top rows removed.
+    """
     assert top > 0
 
     shard_iter = iter(shards)
@@ -505,7 +513,7 @@ def shards_trim_top(shards, top):
         shard_tail = shard_body_tail(num_rows, sbody)
         top -= num_rows
     else:
-        raise CanvasError("tried to trim shards out of existance")
+        raise CanvasError("tried to trim shards out of existence")
 
     sbody = shard_body(cviews, shard_tail, False)
     shard_tail = shard_body_tail(num_rows, sbody)
@@ -524,7 +532,9 @@ def shards_trim_top(shards, top):
 
 
 def shards_trim_rows(shards, keep_rows):
-    """Return the topmost keep_rows rows from shards."""
+    """
+    Return the topmost keep_rows rows from shards.
+    """
     assert keep_rows >= 0, keep_rows
 
     new_shards = []
