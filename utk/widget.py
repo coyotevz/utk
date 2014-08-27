@@ -160,10 +160,10 @@ class Widget(GObject):
             return
         if not self.is_mapped:
             if self._alloc_needed and self.parent:
-                print "%s needs allocation" % self
+                log.debug("%s needs allocation", self)
                 self.parent._alloc_needed = True
                 self.parent.check_resize()
-                print "%s allocation %r" % (self, self._allocation)
+                log.debug("%s allocation %r", self, self._allocation)
             if not self.is_realized:
                 self.realize()
             log.debug("%s::map()" % self.name)

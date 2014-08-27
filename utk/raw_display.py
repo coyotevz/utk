@@ -4,14 +4,18 @@
 Direct terminal UI implementation
 """
 
-import sys
 import os
 import logging
-import fcntl
-import termios
 import struct
+import sys
 import signal
-import tty
+
+try:
+    import fcntl
+    import termios
+    import tty
+except ImportError:
+    pass # windows
 
 import utk
 from utk.screen import BaseScreen, RealTerminal, AttrSpec
@@ -56,6 +60,24 @@ class Screen(BaseScreen, RealTerminal):
 
         self.set_input_timeouts()
 
+    def write(self, data):
+        """
+        Write some data to the terminal.
+
+        You may wish to override this if you're using something other than
+        regular files for input and output.
+        """
+        self._term_output_file.write(data)
+
+    def flush(self):
+        """
+        Flush the output buffer.
+
+        You may wish to override this if you're using something other than
+        regular files for input and output.
+        """
+        self._term_output_file.flush()
+
     use_alternate_buffer = property(lambda x: x._alternate_buffer)
 
     def do_update_palette_entry(self, name, *attrspecs):
@@ -73,7 +95,7 @@ class Screen(BaseScreen, RealTerminal):
             return
 
         if self.use_alternate_buffer:
-            self._term_output_file.write(escape.SWITCH_TO_ALTERNATE_BUFFER)
+            self.write(escape.SWITCH_TO_ALTERNATE_BUFFER)
             self._rows_used = None
         else:
             self._rows_used = 0
@@ -99,8 +121,8 @@ class Screen(BaseScreen, RealTerminal):
         if self.use_alternate_buffer:
             move_cursor = escape.RESTORE_NORMAL_BUFFER
 
-        self._term_output_file.write(self._attrspec_to_escape(
-            AttrSpec('', '')) + escape.SI + escape.MOUSE_TRACKING_OFF +
+        self.write(self._attrspec_to_escape(
+            AttrSpec('', '')) + escape.SI + escape.MOUSE_TRACKING_OFF + \
             escape.SHOW_CURSOR + move_cursor + "\n" + escape.SHOW_CURSOR)
         self._input_iter = self._fake_input_iter()
 
@@ -159,7 +181,7 @@ class Screen(BaseScreen, RealTerminal):
         def set_cursor_home():
             if not partial_display():
                 return escape.set_cursor_position(0, 0)
-            return (escape.CURSOR_HOME_COL + escape.move_cursor_up(cy))
+            return escape.CURSOR_HOME_COL + escape.move_cursor_up(cy)
 
         def set_cursor_row(y):
             if not partial_display():
@@ -273,18 +295,19 @@ class Screen(BaseScreen, RealTerminal):
             self._cy = y
 
         if self._resized:
+            # handle resize before trying to draw screen
             return
 
         # Write list of commands to terminal
         try:
             k = 0
             for l in o:
-                self._term_output_file.write(l)
+                self.write(l)
                 k += len(l)
                 if k > 1024:
-                    self._term_output_file.flush()
+                    self.flush()
                     k = 0
-            self._term_output_file.flush()
+            self.flush()
         except IOError, e:
             # ignore interrupted syscal
             if e.args[0] != 4:
@@ -345,7 +368,7 @@ class Screen(BaseScreen, RealTerminal):
         After calling this method, get_input() will include mouse
         click events along with keystrokes.
         """
-        self._term_output_file.write(escape.MOUSE_TRACKING_ON)
+        self.write(escape.MOUSE_TRACKING_ON)
         self._start_gpm_tracking()
 
     def get_input(self, raw_keys=False):
@@ -495,8 +518,8 @@ class Screen(BaseScreen, RealTerminal):
 
         while True:
             try:
-                self._term_output_file.write(escape.DESIGNATE_G1_SPECIAL)
-                self._term_output_file.flush()
+                self.write(escape.DESIGNATE_G1_SPECIAL)
+                self.flush()
                 break
             except IOError:
                 pass
@@ -531,7 +554,7 @@ class Screen(BaseScreen, RealTerminal):
         return escape.ESC + "[0;%s;%s%sm" % (fg, st, bg)
 
     def set_terminal_properties(self, colors=None, bright_is_bold=None,
-                               has_underline=None):
+                                has_underline=None):
         """
         colors -- number of colors terminal supports (1, 16, 88, 256)
             or None to leave unchanged
@@ -553,7 +576,7 @@ class Screen(BaseScreen, RealTerminal):
         if colors == self.colors and\
            bright_is_bold == self.bright_is_bold and\
            has_underline == self.has_underline:
-               return
+            return
 
         self.colors = colors
         self.bright_is_bold = bright_is_bold

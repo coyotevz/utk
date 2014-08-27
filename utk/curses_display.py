@@ -9,28 +9,33 @@ import curses
 import _curses
 
 import utk
-from utk.screen import BaseScreen, RealTerminal
+from utk.screen import BaseScreen, RealTerminal, AttrSpec, \
+    UNPRINTABLE_TRANS_TABLE
+from utk.compat import bytes, PYTHON3
 
 log = logging.getLogger("utk.curses_display")
 
-_curses_colors = {
-    'default':       (-1, 0),
-    'black':         (curses.COLOR_BLACK,   0),
-    'dark red':      (curses.COLOR_RED,     0),
-    'dark green':    (curses.COLOR_GREEN,   0),
-    'brown':         (curses.COLOR_YELLOW,  0),
-    'dark blue':     (curses.COLOR_BLUE,    0),
-    'dark magenta':  (curses.COLOR_MAGENTA, 0),
-    'dark cyan':     (curses.COLOR_CYAN,    0),
-    'light gray':    (curses.COLOR_WHITE,   0),
-    'dark gray':     (curses.COLOR_BLACK,   1),
-    'light red':     (curses.COLOR_RED,     1),
-    'light green':   (curses.COLOR_GREEN,   1),
-    'yellow':        (curses.COLOR_YELLOW,  1),
-    'light blue':    (curses.COLOR_BLUE,    1),
-    'light magenta': (curses.COLOR_MAGENTA, 1),
-    'light cyan':    (curses.COLOR_CYAN,    1),
-    'white':         (curses.COLOR_WHITE,   1),
+KEY_RESIZE = 410 # curses.KEY_RESIZE (sometimes not defined)
+KEY_MOUSE = 409 # curses.KEY_MOUSE
+
+_curses_colours = {
+    'default':        (-1,                    0),
+    'black':          (curses.COLOR_BLACK,    0),
+    'dark red':       (curses.COLOR_RED,      0),
+    'dark green':     (curses.COLOR_GREEN,    0),
+    'brown':          (curses.COLOR_YELLOW,   0),
+    'dark blue':      (curses.COLOR_BLUE,     0),
+    'dark magenta':   (curses.COLOR_MAGENTA,  0),
+    'dark cyan':      (curses.COLOR_CYAN,     0),
+    'light gray':     (curses.COLOR_WHITE,    0),
+    'dark gray':      (curses.COLOR_BLACK,    1),
+    'light red':      (curses.COLOR_RED,      1),
+    'light green':    (curses.COLOR_GREEN,    1),
+    'yellow':         (curses.COLOR_YELLOW,   1),
+    'light blue':     (curses.COLOR_BLUE,     1),
+    'light magenta':  (curses.COLOR_MAGENTA,  1),
+    'light cyan':     (curses.COLOR_CYAN,     1),
+    'white':          (curses.COLOR_WHITE,    1),
 }
 
 
@@ -57,7 +62,7 @@ class Screen(BaseScreen, RealTerminal):
         if self.has_color:
             curses.start_color()
             if curses.COLORS < 8:
-                # not colorful enouth
+                # not colourful enough
                 self.has_color = False
         if self.has_color:
             try:

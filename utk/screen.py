@@ -10,7 +10,7 @@ import glib
 from gobject import GObject, type_name
 
 from utk.canvas import SolidCanvas
-from utk.utils import gsignal, int_scale
+from utk.utils import gsignal, int_scale, StoppingContext
 from utk.constants import PRIORITY_REDRAW
 
 log = logging.getLogger("utk.screen")
@@ -594,13 +594,25 @@ class BaseScreen(GObject):
     started = property(lambda self: self._started)
 
     def start(self):
-        """Initialize the screen and input mode."""
+        """
+        Set up screen. If the screen has already been started, does nothing.
+
+        May be used as a context manager, in which case :meth:`stop` will
+        automatically be called at the end of the block::
+
+            with screen.start():
+                ...
+
+        You shouldn't override this method in a subclass; intead, override
+        :meth:`do_start`.
+        """
         if self.started:
             return
         log.debug("%s::start()", type_name(self))
         self.emit("start")
         if not self.started:
             log.error("%s not properly started", type_name(self))
+        return StoppingContext(self)
 
     def stop(self):
         """Restore the screen."""

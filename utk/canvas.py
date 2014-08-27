@@ -183,8 +183,8 @@ class Canvas(object):
         return self._shards
 
     def calculate_shards(self):
-        #if not self.is_dirty:
-        #    return
+        if not self.is_dirty:
+            return
 
         log.debug("calculating shards in %s <%x>", repr(self), id(self))
 
@@ -199,7 +199,7 @@ class Canvas(object):
         updates = None
         if self._update:
             import pprint
-            pprint.pprint(self._update)
+            log.debug(pprint.pformat(self._update))
             for u in self._update:
                 if not updates:
                     updates = u
@@ -210,7 +210,7 @@ class Canvas(object):
                                        y=max(updates.y, self._area.y),
                                        width=min(updates.width, self._area.width),
                                        height=min(updates.height, self._area.height))
-            print "updates for '%s': %r" % (self._text, updates,)
+            log.debug("updates for '%s': %r", self._text, updates,)
         else:
             updates = self._area
 
@@ -250,7 +250,7 @@ class Canvas(object):
                 middle_shards = child.shards
 
             self._shards = top_shards + middle_shards + bottom_shards
-#        self._unset_dirty()
+        self._unset_dirty()
 
     def content(self):
         shard_tail = []
@@ -323,7 +323,7 @@ class TextCanvas(Canvas):
 
     def body_content(self, trim_left=0, trim_top=0, cols=None, rows=None,
                      attr_map=None):
-        print "body_content for %s" % self
+        log.debug("body_content for %s", self)
         if cols is None:
             cols = self.cols - trim_left
         if rows is None:
@@ -420,7 +420,11 @@ class BlankCanvas(Canvas):
         return "<BlankCanvas(cols=%d, rows=%d)>" % (self.cols, self.rows)
 
 def shard_body_row(sbody):
-    """Return one row, advancing the iterator in sbody."""
+    """
+    Return one row, advancing the iterators in sbody.
+
+    ** MODIFIES sbody by calling next() on its iterators **
+    """
     row = []
     for done_rows, content_iter, cview in sbody:
         if content_iter:
@@ -435,7 +439,9 @@ def shard_body_row(sbody):
 
 
 def shard_body_tail(num_rows, sbody):
-    """Return a new shard tail that follows this shard body."""
+    """
+    Return a new shard tail that follows this shard body.
+    """
     shard_tail = []
     col_gap = 0
     done_rows = 0
@@ -473,8 +479,8 @@ def shard_body(cviews, shard_tail, create_iter=True, iter_default=None):
             col += cview.cols
             col_gap -= cview.cols
             if col_gap < 0:
-                print "col_gap = %d" % col_gap
-                print "body = %r" % body
+                log.debug("col_gap = %d", col_gap)
+                log.debug("body = %r", body)
                 raise CanvasError("cviews overflow gaps in shard_tail!!!")
             if create_iter and cview.canv:
                 new_iter = cview.content()
@@ -492,7 +498,9 @@ def shard_body(cviews, shard_tail, create_iter=True, iter_default=None):
 
 
 def shards_trim_top(shards, top):
-    """Return shards with top rows removed."""
+    """
+    Return shards with top rows removed.
+    """
     assert top > 0
 
     shard_iter = iter(shards)
@@ -505,7 +513,7 @@ def shards_trim_top(shards, top):
         shard_tail = shard_body_tail(num_rows, sbody)
         top -= num_rows
     else:
-        raise CanvasError("tried to trim shards out of existance")
+        raise CanvasError("tried to trim shards out of existence")
 
     sbody = shard_body(cviews, shard_tail, False)
     shard_tail = shard_body_tail(num_rows, sbody)
@@ -524,7 +532,9 @@ def shards_trim_top(shards, top):
 
 
 def shards_trim_rows(shards, keep_rows):
-    """Return the topmost keep_rows rows from shards."""
+    """
+    Return the topmost keep_rows rows from shards.
+    """
     assert keep_rows >= 0, keep_rows
 
     new_shards = []
