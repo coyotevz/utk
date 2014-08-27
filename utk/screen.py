@@ -10,7 +10,7 @@ import glib
 from gobject import GObject, type_name
 
 from utk.canvas import SolidCanvas
-from utk.utils import gsignal, int_scale
+from utk.utils import gsignal, int_scale, StoppingContext
 from utk.constants import PRIORITY_REDRAW
 
 log = logging.getLogger("utk.screen")
