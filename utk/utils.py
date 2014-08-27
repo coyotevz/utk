@@ -341,5 +341,21 @@ def int_scale(val, val_range, out_range):
 
 isiterable = lambda x: hasattr(x, '__iter__')
 
+
+class StoppingContext(object):
+    """
+    Context manager that calls ``stop`` on a given object on exit. Used to make
+    the ``start`` method on `MainLoop` and `BaseScreen` optionally act as
+    context managers.
+    """
+    def __init__(self, wrapped):
+        self._wrapped = wrapped
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        self._wrapped.stop()
+
 # FIXME: Quick&Dirty
 from utk.rle_util import *

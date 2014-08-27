@@ -60,6 +60,24 @@ class Screen(BaseScreen, RealTerminal):
 
         self.set_input_timeouts()
 
+    def write(self, data):
+        """
+        Write some data to the terminal.
+
+        You may wish to override this if you're using something other than
+        regular files for input and output.
+        """
+        self._term_output_file.write(data)
+
+    def flush(self):
+        """
+        Flush the output buffer.
+
+        You may wish to override this if you're using something other than
+        regular files for input and output.
+        """
+        self._term_output_file.flush()
+
     use_alternate_buffer = property(lambda x: x._alternate_buffer)
 
     def do_update_palette_entry(self, name, *attrspecs):
@@ -77,7 +95,7 @@ class Screen(BaseScreen, RealTerminal):
             return
 
         if self.use_alternate_buffer:
-            self._term_output_file.write(escape.SWITCH_TO_ALTERNATE_BUFFER)
+            self.write(escape.SWITCH_TO_ALTERNATE_BUFFER)
             self._rows_used = None
         else:
             self._rows_used = 0
@@ -103,7 +121,7 @@ class Screen(BaseScreen, RealTerminal):
         if self.use_alternate_buffer:
             move_cursor = escape.RESTORE_NORMAL_BUFFER
 
-        self._term_output_file.write(self._attrspec_to_escape(
+        self.write(self._attrspec_to_escape(
             AttrSpec('', '')) + escape.SI + escape.MOUSE_TRACKING_OFF + \
             escape.SHOW_CURSOR + move_cursor + "\n" + escape.SHOW_CURSOR)
         self._input_iter = self._fake_input_iter()
@@ -284,12 +302,12 @@ class Screen(BaseScreen, RealTerminal):
         try:
             k = 0
             for l in o:
-                self._term_output_file.write(l)
+                self.write(l)
                 k += len(l)
                 if k > 1024:
-                    self._term_output_file.flush()
+                    self.flush()
                     k = 0
-            self._term_output_file.flush()
+            self.flush()
         except IOError, e:
             # ignore interrupted syscal
             if e.args[0] != 4:
@@ -350,7 +368,7 @@ class Screen(BaseScreen, RealTerminal):
         After calling this method, get_input() will include mouse
         click events along with keystrokes.
         """
-        self._term_output_file.write(escape.MOUSE_TRACKING_ON)
+        self.write(escape.MOUSE_TRACKING_ON)
         self._start_gpm_tracking()
 
     def get_input(self, raw_keys=False):
@@ -500,8 +518,8 @@ class Screen(BaseScreen, RealTerminal):
 
         while True:
             try:
-                self._term_output_file.write(escape.DESIGNATE_G1_SPECIAL)
-                self._term_output_file.flush()
+                self.write(escape.DESIGNATE_G1_SPECIAL)
+                self.flush()
                 break
             except IOError:
                 pass
