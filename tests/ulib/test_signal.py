@@ -4,18 +4,18 @@ import pytest
 from tests.callback import SignalEmitCallback
 
 from utk.ulib import SIGNAL_RUN_FIRST, SIGNAL_RUN_LAST
-from utk.ulib.signal import _norm, _unnorm
-from utk.ulib.signal import SignalBase, Signal, SignaledObject, install_signal
+from utk.ulib.utils import norm, unnorm
+from utk.ulib.ssignal import SignalBase, Signal, SignaledObject, install_signal
 
 def test_norm():
-    assert _norm('abc-def') == 'abc_def'
-    assert _norm('-def') == '_def'
-    assert _norm('abc-') == 'abc_'
+    assert norm('abc-def') == 'abc_def'
+    assert norm('-def') == '_def'
+    assert norm('abc-') == 'abc_'
 
 def test_unnorm():
-    assert _unnorm('abc_def') == 'abc-def'
-    assert _unnorm('_def') == '-def'
-    assert _unnorm('abc_') == 'abc-'
+    assert unnorm('abc_def') == 'abc-def'
+    assert unnorm('_def') == '-def'
+    assert unnorm('abc_') == 'abc-'
 
 class TestSignalBase(object):
 
@@ -273,8 +273,8 @@ class TestSignaledObject(object):
         class T(SignaledObject):
             __signals__ = { 'test-signal': None }
         t = T()
-        assert hasattr(t, '_signals')
-        assert 'test-signal' in t._signals
+        assert hasattr(t, '_decl_signals')
+        assert 'test-signal' in t._decl_signals
 
     def test_signal_wo_cb_raises(self):
         class T(SignaledObject):
