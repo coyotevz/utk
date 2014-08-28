@@ -14,12 +14,16 @@ class uproperty(object):
         return self.set(obj, value)
 
     def get(self, obj):
-        print "getting prop: %s from %r" % (self.name, obj)
-        return obj._get_property(self.name)
+        try:
+            return obj._get_property(self.name)
+        except UnknowedProperty:
+            return super(obj.__class__, obj)._get_property(self.name)
 
     def set(self, obj, value):
-        print "setting prop: %s from %r, val: %r" % (self.name, obj, value)
-        return obj._set_property(self.name, value)
+        try:
+            return obj._set_property(self.name, value)
+        except UnknowedProperty:
+            return super(obj.__class__, obj)._set_property(self.name, value)
 
 
 class UnknowedProperty(Exception):
@@ -106,7 +110,29 @@ class FreezedContext(object):
         self._obj.thaw_notify()
 
 
-class Sample(PropertiedClass):
+class SampleBase(PropertiedClass):
+    _name = None
+    _age = 0
+
+    name = uproperty()
+    age = uproperty(type=int, min=18, max=99)
+
+    def _get_property(self, pname):
+        if pname == 'name':
+            return self._name
+        elif pname == 'age':
+            return self._age
+        else:
+            raise UnknowedProperty()
+
+    def _set_property(self, pname, value):
+        if pname == 'name':
+            self._name = value
+        elif pname == 'age':
+            self._age = age
+
+
+class Sample(SampleBase):
 
     width = uproperty()
     height = uproperty(type=int, min=0, max=100)
@@ -118,6 +144,12 @@ class Sample(PropertiedClass):
         self._height = 0
         self._border = 0
         self._hidden = True
+
+    def set_border_width(self, value):
+        self.set_property('border-width', value)
+
+    def get_border_width(self):
+        self.get_property('border-width')
 
     def _get_property(self, pname):
         if pname == "width":
