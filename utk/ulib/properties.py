@@ -61,7 +61,7 @@ class PropertiedMeta(type):
         _install_properties(cls)
 
 
-class PropertiedClass(object):
+class PropertiedObject(object):
     __metaclass__ = PropertiedMeta
 
     _freezed = False
@@ -99,7 +99,7 @@ class PropertiedClass(object):
 class FreezedContext(object):
     """
     Context manager that calls ``thaw_notify`` on a given object on exit. Used
-    to make the ``freeze_notify`` method on `PropertiedClass`.
+    to make the ``freeze_notify`` method on `PropertiedObject`.
     """
 
     def __init__(self, obj):
@@ -112,7 +112,7 @@ class FreezedContext(object):
         self._obj.thaw_notify()
 
 
-class SampleBase(PropertiedClass):
+class SampleBase(PropertiedObject):
     _name = None
     _age = 0
 
