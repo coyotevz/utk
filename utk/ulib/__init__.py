@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import sys
+
 from signals import (
     SIGNAL_RUN_FIRST,
     SIGNAL_RUN_LAST,
+    SignaledObject,
 )
 
 from context import (
@@ -17,6 +20,11 @@ from context import (
 
 from loop import (
     MainLoop,
+)
+
+from properties import (
+    uproperty,
+    PropertiedObject,
 )
 
 # some shortcuts to work with main context
@@ -94,3 +102,5 @@ _DEFAULT_VALUES = {
 }
 
 # main class to inherit
+class UObject(SignaledObject, PropertiedObject):
+    pass
