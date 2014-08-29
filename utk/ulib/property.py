@@ -38,12 +38,11 @@ class UnknowedProperty(Exception):
 
 
 def install_property(cls, uprop):
-    if not hasattr(cls, '_decl_properties'):
-        cls._decl_properties = {}
-    cls._decl_properties[uprop.name] = uprop
-    signame = "notify::%s" % uprop.name
-    print 'signame:', signame
-    install_signal(cls, signame, default_cb=False)
+    # copy to avoid overwrite super _decl_properties
+    props = dict(getattr(cls, '_decl_properties', {}))
+    props[uprop.name] = uprop
+    install_signal(cls, "notify::%s" % uprop.name, default_cb=False)
+    setattr(cls, '_decl_properties', props)
 
 def _install_properties(cls):
 
@@ -139,8 +138,9 @@ class Sample(SampleBase):
 
     width = uproperty()
     height = uproperty(type=int, min=0, max=100)
-    border_width = uproperty('border-width', type=int, min=0, blurb="Border width")
-    visible = uproperty(type=bool, default=True, blurb="Widget is visible")
+    border_width = uproperty(type=int, min=0, blurb="Border width")
+    visible = uproperty('visible', type=bool, default=True,
+                        blurb="Widget is visible")
 
     def __init__(self):
         self._width = 0
@@ -150,6 +150,7 @@ class Sample(SampleBase):
 
     def set_border_width(self, value):
         self.set_property('border-width', value)
+        self.notify('border-width')
 
     def get_border_width(self):
         self.get_property('border-width')
