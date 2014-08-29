@@ -219,7 +219,8 @@ class TestSignal(object):
         class T(object):
             def __init__(self):
                 self.custom_called = False
-                self.test_signal = Signal("test-signal", "custom_handler", namespace=self)
+                self.test_signal = Signal("test-signal", "custom_handler",
+                                          owner=self)
             def custom_handler(self, *args):
                 self.custom_called = True
         class R(T):
@@ -236,7 +237,7 @@ class TestSignal(object):
         class T(object):
             def __init__(self):
                 self.called = False
-                self.test_signal = Signal("test-signal", namespace=self)
+                self.test_signal = Signal("test-signal", owner=self)
             def do_test_signal(self, *args):
                 self.called = True
         class R(T):
@@ -253,7 +254,8 @@ class TestSignal(object):
         class T(object):
             def __init__(self):
                 self.called = False
-                self.test_signal = Signal("test-signal", namespace=self, prefix='on_')
+                self.test_signal = Signal("test-signal", prefix='on_',
+                                          owner=self)
             def on_test_signal(self, *args):
                 self.called = True
         class R(T):
@@ -271,25 +273,29 @@ class TestSignaledObject(object):
 
     def test_signal_decl(self):
         class T(SignaledObject):
-            __signals__ = { 'test-signal': None }
+            __signals__ = {'test-signal': False}
         t = T()
         assert hasattr(t, '_decl_signals')
         assert 'test-signal' in t._decl_signals
 
     def test_signal_wo_cb_raises(self):
         class T(SignaledObject):
-            __signals__ = { 'test-signal': None }
+            __signals__ = {'test-signal': None}
+        with pytest.raises(AttributeError):
+            t = T()
+
+
+    def test_unknown_signal_raises(self):
+        class T(SignaledObject):
+            __signals__ = {'test-signal': False}
         t = T()
-        with pytest.raises(AttributeError):
-            t.emit('test-signal')
-        cb_1 = lambda x:x
-        t.connect('test-signal', cb_1)
-        with pytest.raises(AttributeError):
-            t.emit('test-signal')
+        t.emit('test-signal')
+        with pytest.raises(TypeError):
+            t.emit('test-signal-1')
 
     def test_signal_emission(self):
         class T(SignaledObject):
-            __signals__ = { 'test-signal': None }
+            __signals__ = {'test-signal': None}
             called = False
             def do_test_signal(self, *args):
                 self.called = True
@@ -324,3 +330,10 @@ class TestSignaledObject(object):
         assert cb_1.called == False
         assert t2.called == True
         assert cb_2.called == True
+
+    def test_signal_inheritance(self):
+        class T1(SignaledObject):
+            __signals__ = {'t1-signal': False}
+
+        t1 = T1()
+        assert 't1-signal' in t1._decl_signals

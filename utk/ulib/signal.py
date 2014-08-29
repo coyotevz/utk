@@ -1,36 +1,21 @@
 # -*- coding: utf-8 -*-
 
 """
-Provides mechanisms to use signal handlers in a framework
+    utk.ulib.signal
+    ~~~~~~~~~~~~~~~
 
-Mimics the GObject signals behavior in a pure python implementation.
+    Provides mechanisms to use signal handlers in a framework.
+
+    Mimics the GObject signals behaviour in a pure python implementation.
 """
 
-__all__ = ['Signal', 'SignalBase', 'install_signal', 'SignaledObjectMetaType',
-           'SignaledObject', 'SIGNAL_RUN_FIRST', 'SIGNAL_RUN_LAST']
+__all__ = ('Signal', 'SignalBase', 'install_signal', 'SignaledMeta',
+           'SignaledObject', 'SIGNAL_RUN_FIRST', 'SIGNAL_RUN_LAST')
 
-from types import ClassType, InstanceType,FunctionType, MethodType
+from utils import norm, unnorm
 
 SIGNAL_RUN_FIRST, SIGNAL_RUN_LAST = range(2)
 
-def _norm(name):
-    return name.replace('-', '_')
-
-def _unnorm(name):
-    return name.replace('_', '-')
-
-def _bounded(method):
-    if callable(method):
-        if type(method) is FunctionType: # bounded
-            return True
-        elif type(method) is MethodType:
-            im_self = getattr(method, 'im_self')
-            if im_self: return True
-            else: return False
-        else:
-            raise AttributeError("unknow callable type")
-    else:
-        return None
 
 class SignalBase(object):
     """
@@ -141,8 +126,8 @@ class Signal(SignalBase):
     """
     _prefix = 'do_'
 
-    def __init__(self, name, default_cb=None, namespace=None,
-                 flag=SIGNAL_RUN_LAST, prefix=None):
+    def __init__(self, name, default_cb=None, flag=SIGNAL_RUN_LAST, owner=None,
+                 prefix=None):
         """
         @param name: name
         @type name: str
@@ -181,90 +166,92 @@ class Signal(SignalBase):
             señal sea útil se tendran que conectar los callbacks con los 
             métodos connect() o connect_after().
         """
-        self._namespace = None
-        self._default_cb_name = None
-
-        if prefix:
-            self._prefix = prefix
+        if prefix is None:
+            prefix = self._prefix
 
         if default_cb: # true when default_cb is not (False, None)
-            assert callable(default_cb) or type(default_cb) is str,\
-                    "default_cb must be a callable or str"
+            assert callable(default_cb) or isinstance(default_cb, basestring),\
+                    "default_cb must be a callable or method name"
 
-        if type(default_cb) is str and namespace:
-            assert type(namespace) is dict or \
-                   type(getattr(namespace, '__dict__')) is dict, \
-                   "namespace must be a dict instance or object with __dict__"\
-                   "attribute"
-
-            self._default_cb_name = default_cb
-            default_cb = None
-
-        elif default_cb is None:
-            assert type(namespace) is dict or \
-                   type(getattr(namespace, '__dict__')) is dict or \
-                   isinstance(namespace, type), \
-                   "namespace must be a dict instance or object with __dict__"\
-                   " attribute"
-
-            self._default_cb_name = self._prefix + _norm(name)
-
-        self._namespace = namespace
+        if isinstance(default_cb, basestring):
+            default_cb = _get_default_cb(default_cb, owner)
+        elif default_cb is None and owner:
+            default_cb = _get_default_cb(prefix + norm(name), owner)
 
         super(Signal, self).__init__(name, default_cb=default_cb, flag=flag)
 
-    def emit(self, *args):
-        if self._default_cb is None and self._default_cb_name:
-            self._default_cb = self._get_default_cb()
 
-        return super(Signal, self).emit(*args)
+class UnboundedSignal(object):
 
-    def _get_default_cb(self):
-        assert self._namespace, "i don't know where to find default callback"
+    def __init__(self, *args, **kwargs):
+        self._args = args
+        self._kw = kwargs
 
-        default_cb = getattr(self._namespace, self._default_cb_name, None)
+    def bound(self, obj):
+        kw = self._kw
+        kw['owner'] = obj
+        return Signal(*self._args, **kw)
 
-        if default_cb is None:
-            raise AttributeError("%s object has no attribute '%s'"\
-                    % (self._namespace, self._default_cb_name))
 
-        assert callable(default_cb),\
-                "'%s' attribute must be callable" % self._default_cb_name
-
-        #if not _bounded(default_cb):
-        #    print default_cb
-        #    raise TypeError("%s callable must be a bound method "\
-        #        "(received an unbound method)" % self._default_cb_name)
-
-        return default_cb
-
-def _install(signal, override=False):
-    sig_name = signal.name
-    obj = signal._namespace
-
-    _signals = getattr(obj, '_signals', {})
-
-    if not override:
-        assert not _signals.has_key(sig_name),\
-            "The %s already has a signal named '%s'" % (obj.__class__.__name__, signame)
-
-    _signals.update({sig_name: signal})
-
-    setattr(obj, '_signals', _signals)
-
-def install_signal(obj, sig_name, default_cb=None, flag=SIGNAL_RUN_LAST,
+def install_signal(cls, signame, default_cb=None, flag=SIGNAL_RUN_LAST,
                    override=False):
-    
-    assert isinstance(obj.__class__, type),\
-            "'obj' must be an instance (%s received)" % type(obj)
+    assert isinstance(cls, type), "'cls' must be a class type"
 
     if isinstance(default_cb, basestring):
-        default_ = getattr(obj, "%s" % default_cb, None)
+        default_ = getattr(cls, "%s" % default_cb, None)
         assert default_ and callable(default_), "You set '%s' as default "\
                 "callback name but i can't find any callable with this name "\
-                "in %s instance" % (default_cb, obj.__clas__.__name__)
+                "in %s class" % (default_cb, cls.__name__)
 
-    _install(Signal(sig_name, default_cb, obj, flag), override)
+    signals = getattr(cls, '_decl_signals', {})
+
+    if not signals and not getattr(cls, '_signal_api', None):
+        _install_signals_api(cls)
+
+    if not override:
+        assert not signals.has_key(signame), "The %s already has a signal "\
+                "named '%s'" % (cls.__name__, signame)
+
+    signals[signame] = UnboundedSignal(signame, default_cb, flag)
+    setattr(cls, '_decl_signals', signals)
+
+
+class SignaledMeta(type):
+
+    def __init__(cls, classname, bases, ns):
+        type.__init__(cls, classname, bases, ns)
+        _install_signals(cls)
+
+
+#### for internal use only ####
+
+def _install_signals(cls):
+    for signame, conf in getattr(cls, '__signals__', {}).iteritems():
+        conf = _get_signal_configuration(conf)
+        install_signal(cls, signame,
+                       default_cb=conf['handler'],
+                       flag=conf['flag'],
+                       override=conf['override'])
+    else:
+        _install_signals_api(cls)
+    if hasattr(cls, '__signals__'):
+        delattr(cls, '__signals__')
+
+
+
+def _get_default_cb(cb_name, owner=None):
+    assert owner, "i don't know where to find default callback"
+
+    default_cb = getattr(owner, cb_name, None)
+
+    if default_cb is None:
+        raise AttributeError("%s object has no attribute '%s'"\
+                                % (owner, cb_name))
+
+    assert callable(default_cb),\
+            "'%s' attribute must be callable" % cb_name
+
+    return default_cb
 
 def _get_signal_configuration(configuration):
     conf = dict()
@@ -284,7 +271,8 @@ def _get_signal_configuration(configuration):
             else:
                 raise ValueError("_get_signal_configuration can't handle '%s'"
                                  % elem)
-
+    elif isinstance(configuration, bool):
+        conf['handler'] = configuration
     elif isinstance(configuration, (str, int)):
         if configuration in range(2):
             conf['flag'] = configuration
@@ -298,89 +286,57 @@ def _get_signal_configuration(configuration):
         raise ValueError("_get_signal_configuration can't handle '%s'"
                          % configuration)
 
-    conf['flag'] = conf.get('flag', SIGNAL_RUN_LAST)
-    conf['handler'] = conf.get('handler')
-    conf['override'] = conf.get('override', False) ## necesario False ??
+    return {'flag': conf.get('flag', SIGNAL_RUN_LAST),
+            'handler': conf.get('handler'),
+            'override': conf.get('override', False)}
 
-    return conf
 
-def signal_list_names(obj):
+def _bound_signals(obj):
 
-    assert isinstance(obj, SignaledObjectMetaType) or hasattr(obj,'_signals'),\
-            "the argument must be a signaled object or class"
+    signals = dict(getattr(obj, '_decl_signals', {}))
+    for sn in list(signals):
+        signals[sn] = signals[sn].bound(obj)
+    obj._decl_signals = signals
 
-    if isinstance(obj, SignaledObjectMetaType):
-        return tuple(obj.__signals__.iterkeys())
-    elif hasattr(obj, '_signals'):
-        return tuple(obj._signals.iterkeys())
-    else:
-        raise ValueError("no signaled object")
 
-class SignaledMetaType(type):
-
-    def __new__(cls, name, bases, namespace):
-        _signals_decls = namespace.get('__signals__', {})
-        _signals_base = {}
-        for base in reversed(bases):
-            if hasattr(base, '__signals__'):
-                _signals_base.update(base.__signals__)
-        _signals_base.update(_signals_decls)
-        namespace['__signals__'] = _signals_base
-        return type.__new__(cls, name, bases, namespace)
-
-    def __call__(cls, *args, **kw):
-        _signals_decls = getattr(cls, '__signals__', {})
-        obj = type.__call__(cls, *args, **kw)
-
-        for sig_name, conf in _signals_decls.iteritems():
-            conf = _get_signal_configuration(conf)
-            install_signal(obj=obj,
-                           sig_name=sig_name,
-                           default_cb=conf['handler'],
-                           flag=conf['flag'],
-                           override=conf['override'])
-
-        return obj
-
-# Utility func
-def _get_and_assert(self, sig_name):
-    sig = self._signals.get(sig_name)
+def _get_and_assert(obj, signame):
+    sig = obj._decl_signals.get(signame)
     if not sig:
-        raise TypeError("unknown signal name: %s" % sig_name)
+        raise TypeError("unknown signal name: %s" % signame)
     return sig
 
+
+def _install_signals_api(cls):
+
+    if hasattr(cls, '_signal_api'):
+        return
+
+    print "installing signal api on '%s'" % cls.__name__
+
+    # override init
+    _orig_init = getattr(cls, '__init__', lambda *a, **k: None)
+    def __init__(self, *args, **kwargs):
+        _bound_signals(self)
+        _orig_init(self, *args, **kwargs)
+
+    # signal api
+    def emit(self, signame, *data):
+        signal = _get_and_assert(self, signame)
+        signal.emit(self, *data)
+
+    def connect(self, signame, callback, *data):
+        signal = _get_and_assert(self, signame)
+        signal.connect(callback)
+
+    api_methods = dict(locals())
+    api = ('__init__', 'emit', 'connect')
+
+    for meth in api:
+        setattr(cls, meth, api_methods[meth])
+
+    cls._signal_api = True
+
+
 class SignaledObject(object):
-    __metaclass__ = SignaledMetaType
+    __metaclass__ = SignaledMeta
 
-    # Signal API
-    def emit(self, detailed_signal, *data):
-        signal = _get_and_assert(self, detailed_signal)
-        signal.emit(*data) # FIXME: data would have to be a Event object?
-                      # ans: only for event signals, like "button-press-event"
-        # Implement propagation mechanisms
-
-    def stop_emission(self, detailed_signal):
-        signal = _get_and_assert(self, detailed_signal)
-        signal.stop_emission()
-
-    def connect(self, detailed_signal, callback, *extra_data):
-        signal = _get_and_assert(self, detailed_signal)
-        signal.connect(callback) # FIXME: que hacemos con extra_data ??
-
-    def connect_after(self, detailed_signal, callback, *extra_data):
-        signal = _get_and_assert(self, detailed_signal)
-        signal.connect_after(callback) # FIXME: idem anterior
-
-    def disconnect(self, detailed_signal, callback):
-        signal = _get_and_assert(self, detailed_signal)
-        signal.disconnect(callback)
-
-    def disconnect_after(self, detailed_signal, callback):
-        signal = _get_and_assert(self, detailed_signal)
-        signal.disconnect_after(callback)
-
-    def handler_block(self, callback=None):
-        pass
-
-    def handler_unblock(self, callback=None):
-        pass
