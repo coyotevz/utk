@@ -49,3 +49,48 @@ def io_remove_watch(handle, context=None):
     if context is None:
         context = main_context_default()
     return context.io_remove_watch(handle)
+
+# signals utilities
+def usignal(name, *args, **kwargs):
+    """
+    Add a UObject signal to the current object.
+    """
+    frame = sys._getframe(1)
+    try:
+        f_locals = frame.f_locals
+    finally:
+        del frame
+
+    signals = f_locals.setdefault('__signals__', {})
+
+    if args and args[0] == 'override':
+        signals[name] = 'override'
+    else:
+        retval = kwargs.get('retval', None)
+        if retval is None:
+            default_flags = SIGNAL_RUN_FIRST
+        else:
+            default_flags = SIGNAL_RUN_LAST
+
+        flags = kwargs.get('flags', default_flags)
+        if retval is not None and flags != SIGNAL_RUN_LAST:
+            raise TypeError(
+                "You cannot use a return value without setting flags to "
+                "ulib.SIGNAL_RUN_LAST")
+        signals[name] = (flags, retval, args)
+
+
+# properties utilities
+_MAX_VALUES = {
+    int: 0x7fffffff,
+    float: float(2**1024 - 2**971),
+    long: sys.maxint
+}
+_DEFAULT_VALUES = {
+    str: '',
+    float: 0.0,
+    int: 0,
+    long: 0L
+}
+
+# main class to inherit
