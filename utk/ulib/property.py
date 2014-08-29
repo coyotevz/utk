@@ -132,7 +132,7 @@ class SampleBase(PropertiedClass):
         if pname == 'name':
             self._name = value
         elif pname == 'age':
-            self._age = age
+            self._age = value
 
 
 class Sample(SampleBase):
