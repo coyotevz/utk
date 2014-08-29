@@ -101,6 +101,15 @@ _DEFAULT_VALUES = {
     long: 0L
 }
 
-# main class to inherit
-class UObject(SignaledObject, PropertiedObject):
+from signals import SignaledMeta
+from properties import PropertiedMeta
+
+class UObjectMeta(SignaledMeta, PropertiedMeta):
     pass
+
+# main class to inherit
+class UObject(object):
+    __metaclass__= UObjectMeta
+
+# remove metaclasses from namespace
+del SignaledMeta, PropertiedMeta
