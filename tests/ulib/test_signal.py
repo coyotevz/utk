@@ -5,7 +5,7 @@ from tests.callback import SignalEmitCallback
 
 from utk.ulib import SIGNAL_RUN_FIRST, SIGNAL_RUN_LAST
 from utk.ulib.utils import norm, unnorm
-from utk.ulib.signal import SignalBase, Signal, SignaledObject, install_signal
+from utk.ulib.signals import SignalBase, Signal, SignaledObject, install_signal
 
 def test_norm():
     assert norm('abc-def') == 'abc_def'
