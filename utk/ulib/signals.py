@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-    utk.ulib.signal
-    ~~~~~~~~~~~~~~~
+    utk.ulib.signals
+    ~~~~~~~~~~~~~~~~
 
     Provides mechanisms to use signal handlers in a framework.
 
@@ -310,8 +310,6 @@ def _install_signals_api(cls):
 
     if hasattr(cls, '_signal_api'):
         return
-
-    print "installing signal api on '%s'" % cls.__name__
 
     # override init
     _orig_init = getattr(cls, '__init__', lambda *a, **k: None)

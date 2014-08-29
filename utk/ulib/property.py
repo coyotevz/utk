@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 
+"""
+    utk.ulib.property
+    ~~~~~~~~~~~~~~~~~
+"""
+
+from signals import install_signal
+
 
 class uproperty(object):
 
@@ -36,7 +43,7 @@ def install_property(cls, uprop):
     cls._decl_properties[uprop.name] = uprop
     signame = "notify::%s" % uprop.name
     print 'signame:', signame
-    #install_signal(cls, signame, None)
+    install_signal(cls, signame, default_cb=False)
 
 def _install_properties(cls):
 
@@ -60,10 +67,6 @@ class PropertiedClass(object):
 
     _freezed = False
     _thaw = set()
-
-    # FIXME: remove this method, only for test
-    def emit(self, signame):
-        print "We must emit: '%s'" % signame
 
     def get_property(self, pname):
         if pname in self._decl_properties:
