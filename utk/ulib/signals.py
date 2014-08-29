@@ -203,10 +203,10 @@ def install_signal(cls, signame, default_cb=None, flag=SIGNAL_RUN_LAST,
                 "callback name but i can't find any callable with this name "\
                 "in %s class" % (default_cb, cls.__name__)
 
-    signals = getattr(cls, '_decl_signals', {})
+    # copy to avoid ovewirte super _decl_signals
+    signals = dict(getattr(cls, '_decl_signals', {}))
 
-    if not signals and not getattr(cls, '_signal_api', None):
-        _install_signals_api(cls)
+    _install_signals_api(cls)
 
     if not override:
         assert not signals.has_key(signame), "The %s already has a signal "\
@@ -294,8 +294,9 @@ def _get_signal_configuration(configuration):
 def _bound_signals(obj):
 
     signals = dict(getattr(obj, '_decl_signals', {}))
-    for sn in list(signals):
-        signals[sn] = signals[sn].bound(obj)
+    for sn, sig in list(signals.iteritems()):
+        if isinstance(sig, UnboundedSignal):
+            signals[sn] = sig.bound(obj)
     obj._decl_signals = signals
 
 
@@ -308,14 +309,17 @@ def _get_and_assert(obj, signame):
 
 def _install_signals_api(cls):
 
-    if hasattr(cls, '_signal_api'):
-        return
-
     # override init
     _orig_init = getattr(cls, '__init__', lambda *a, **k: None)
-    def __init__(self, *args, **kwargs):
-        _bound_signals(self)
-        _orig_init(self, *args, **kwargs)
+    if not hasattr(_orig_init, '_overwrited'):
+        def __init__(self, *args, **kwargs):
+            _bound_signals(self)
+            _orig_init(self, *args, **kwargs)
+        __init__._overwrited = True
+        setattr(cls, '__init__', __init__)
+
+    if hasattr(cls, '_signal_api'):
+        return
 
     # signal api
     def emit(self, signame, *data):
@@ -327,7 +331,7 @@ def _install_signals_api(cls):
         signal.connect(callback)
 
     api_methods = dict(locals())
-    api = ('__init__', 'emit', 'connect')
+    api = ('emit', 'connect')
 
     for meth in api:
         setattr(cls, meth, api_methods[meth])
