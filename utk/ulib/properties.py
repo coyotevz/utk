@@ -10,7 +10,7 @@ from signals import install_signal
 
 class uproperty(object):
 
-    def __init__(self, name=None, type=None, default=None, min=None, max=None,
+    def __init__(self, name=None, ptype=None, default=None, min=None, max=None,
                  blurb=None):
         self.name = name
 
@@ -117,7 +117,7 @@ class SampleBase(PropertiedObject):
     _age = 0
 
     name = uproperty()
-    age = uproperty(type=int, min=18, max=99)
+    age = uproperty(ptype=int, min=18, max=99)
 
     def _get_property(self, pname):
         if pname == 'name':
@@ -137,9 +137,9 @@ class SampleBase(PropertiedObject):
 class Sample(SampleBase):
 
     width = uproperty()
-    height = uproperty(type=int, min=0, max=100)
-    border_width = uproperty(type=int, min=0, blurb="Border width")
-    visible = uproperty('visible', type=bool, default=True,
+    height = uproperty(ptype=int, min=0, max=100)
+    border_width = uproperty(ptype=int, min=0, blurb="Border width")
+    visible = uproperty('visible', ptype=bool, default=True,
                         blurb="Widget is visible")
 
     def __init__(self):

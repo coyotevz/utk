@@ -12,12 +12,10 @@
 
 import logging
 
-from gobject import GObject, type_name
-from gobject import SIGNAL_RUN_FIRST
-
 import utk
+from utk.ulib import UObject, type_name, SIGNAL_RUN_FIRST
+from utk.ulib import usignal, uproperty
 from utk.constants import STATE_NORMAL
-from utk.utils import gproperty, gsignal
 from utk.utils import Rectangle, Requisition
 from utk.canvas import SolidCanvas
 
@@ -25,7 +23,7 @@ from utk.canvas import SolidCanvas
 log = logging.getLogger("utk.widget")
 
 
-class Widget(GObject):
+class Widget(UObject):
     """
     Base class for all Utk widgets. It provides the common set of methods and
     signals for the widgets including:
@@ -35,24 +33,24 @@ class Widget(GObject):
         - methods to deal with the widget's place in the widget hierarchy
         - event management methods
     """
-    __gtype_name__ = "UtkWidget"
+    __type_name__ = "UtkWidget"
 
     #properties
-    gproperty("name", str)
-    gproperty("parent", object)
-    gproperty("visible", bool, default=False)
+    name = uproperty(str)
+    parent = uproperty(object)
+    visible = uproperty(ptype=bool, default=False)
 
     #signals
-    gsignal("show")
-    gsignal("hide")
-    gsignal("map")
-    gsignal("unmap")
-    gsignal("realize")
-    gsignal("unrealize")
-    gsignal("size-request", retval=object)
-    gsignal("size-allocate", object, flags=SIGNAL_RUN_FIRST)
+    usignal("show")
+    usignal("hide")
+    usignal("map")
+    usignal("unmap")
+    usignal("realize")
+    usignal("unrealize")
+    usignal("size-request", retval=object)
+    usignal("size-allocate", object, flags=SIGNAL_RUN_FIRST)
 
-    gsignal("parent-set", object)
+    usignal("parent-set", object)
 
     _toplevel = False
 
@@ -93,8 +91,6 @@ class Widget(GObject):
         if self._name:
             return self._name
         return type_name(self)
-
-    name = property(get_name, set_name)
 
     def show(self):
         """
@@ -403,10 +399,6 @@ class Widget(GObject):
             yield widget
 
     @property
-    def parent(self):
-        return self._parent
-
-    @property
     def is_toplevel(self):
         return self._toplevel
 
@@ -485,7 +477,7 @@ class Widget(GObject):
                 assert False, "Not reach this line"
 
     ## get/set gproperties
-    def do_get_property(self, prop):
+    def _get_property(self, prop):
         if prop.name == "name":
             return self.get_name()
         elif prop.name == "parent":
@@ -495,7 +487,7 @@ class Widget(GObject):
         else:
             raise AttributeError("unknown property %s" % prop.name) # pragma: no cover
 
-    def do_set_property(self, prop, value):
+    def _set_property(self, prop, value):
         if prop.name == "name":
             self.set_name(value)
         elif prop.name == "parent":

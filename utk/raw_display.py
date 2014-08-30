@@ -31,10 +31,10 @@ _term_files = (sys.stdout, sys.stdin)
 
 
 class Screen(BaseScreen, RealTerminal):
-    __gtype_name__ = "UtkRawScreen"
+    __type_name__ = "UtkRawScreen"
 
     # properties
-    #gproperty("alternate-buffer", bool, default=True)
+    #uproperty("alternate-buffer", bool, default=True)
 
     def __init__(self):
         BaseScreen.__init__(self)

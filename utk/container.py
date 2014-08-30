@@ -12,11 +12,11 @@
 """
 
 import logging
-import glib
 
+from utk import ulib
+from utk.ulib import usignal, uproperty
 from utk.widget import Widget
 from utk.canvas import SolidCanvas
-from utk.utils import gproperty, gsignal
 from utk.constants import RESIZE_PARENT, RESIZE_QUEUE, RESIZE_IMMEDIATE, PRIORITY_RESIZE
 
 log = logging.getLogger("utk.container")
@@ -24,16 +24,16 @@ log = logging.getLogger("utk.container")
 _container_resize_queue = []
 
 class Container(Widget):
-    __gtype_name__ = "UtkContainer"
+    __type_name__ = "UtkContainer"
 
     # properties
-    gproperty("border-width", int)
+    uproperty("border-width", int)
 
     # signals
-    gsignal("add", object)
-    gsignal("remove", object)
-    gsignal("foreach", object, object, bool)
-    gsignal("check-resize")
+    usignal("add", object)
+    usignal("remove", object)
+    usignal("foreach", object, object, bool)
+    usignal("check-resize")
 
     def __init__(self):
         super(Container, self).__init__()
@@ -164,7 +164,7 @@ class Container(Widget):
                           resize_container._resize_pending = True
                           if not _container_resize_queue:
                               log.debug("Adding idle_sizer to loop")
-                              glib.idle_add(self._idle_sizer, priority=PRIORITY_RESIZE)
+                              ulib.idle_add(self._idle_sizer, priority=PRIORITY_RESIZE)
                           _container_resize_queue.append(resize_container)
                   elif resize_container._resize_mode == RESIZE_IMMEDIATE:
                       resize_container.check_resize()

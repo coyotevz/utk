@@ -10,7 +10,8 @@
     :license: LGPL2 or later (see README/COPYING/LICENSE)
 """
 
-from utk.utils import gproperty, clamp
+from utk.ulib import uproperty
+from utk.utils import clamp
 from utk.widget import Widget
 
 
@@ -24,13 +25,13 @@ class Misc(Widget):
     The horizontal and vertical padding attributes allows extra space to be
     added around the widget.
     """
-    __gtype_name__ = "UtkMisc"
+    __type_name__ = "UtkMisc"
 
     # properties
-    gproperty("xalign", float)
-    gproperty("yalign", float)
-    gproperty("xpad", int)
-    gproperty("ypad", int)
+    uproperty("xalign", float)
+    uproperty("yalign", float)
+    uproperty("xpad", int)
+    uproperty("ypad", int)
 
     def __init__(self):
         super(Misc, self).__init__()

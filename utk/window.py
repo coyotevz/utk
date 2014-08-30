@@ -12,9 +12,10 @@
 
 import logging
 
+from utk.ulib import usignal
 from utk.widget import Widget
 from utk.bin import Bin
-from utk.utils import gsignal, Rectangle, Requisition
+from utk.utils import Rectangle, Requisition
 from utk.constants import RESIZE_QUEUE
 
 from utk.screen import get_default_screen
@@ -25,10 +26,10 @@ log = logging.getLogger("utk.window")
 
 
 class Window(Bin):
-    __gtype_name__ = "UtkWindow"
+    __type_name__ = "UtkWindow"
 
     # event signals
-    gsignal("event")
+    usignal("event")
 
     _toplevel = True
 

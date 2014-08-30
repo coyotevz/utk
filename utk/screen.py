@@ -6,11 +6,10 @@ import time
 import termios
 import logging
 
-import glib
-from gobject import GObject, type_name
-
+from utk import ulib
+from utk.ulib import UObject, type_name
 from utk.canvas import SolidCanvas
-from utk.utils import gsignal, int_scale, StoppingContext
+from utk.utils import int_scale, StoppingContext
 from utk.constants import PRIORITY_REDRAW
 
 log = logging.getLogger("utk.screen")
@@ -573,16 +572,16 @@ class ScreenError(Exception):
     pass
 
 
-class BaseScreen(GObject):
-    __gtype_name__ = "UtkScreen"
+class BaseScreen(UObject):
+    __type_name__ = "UtkScreen"
 
     # signals
-    gsignal("start")
-    gsignal("stop")
-    gsignal("update-palette-entry", str, object, object, object, object)
-    gsignal("clear")
-    gsignal("get-cols-rows", retval=object)
-    gsignal("draw-screen")
+    usignal("start")
+    usignal("stop")
+    usignal("update-palette-entry", str, object, object, object, object)
+    usignal("clear")
+    usignal("get-cols-rows", retval=object)
+    usignal("draw-screen")
 
     def __init__(self):
         super(BaseScreen, self).__init__()
@@ -758,7 +757,7 @@ class BaseScreen(GObject):
         """Signal this Screen to redraw in the next idle update"""
         log.debug("%s::queue_draw()", type_name(self))
         if not self._update_idle:
-            self._update_idle = glib.idle_add(self.draw_screen_idle, priority=PRIORITY_REDRAW)
+            self._update_idle = ulib.idle_add(self.draw_screen_idle, priority=PRIORITY_REDRAW)
 
 
     def add_toplevel(self, widget):

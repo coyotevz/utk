@@ -58,6 +58,9 @@ def io_remove_watch(handle, context=None):
         context = main_context_default()
     return context.io_remove_watch(handle)
 
+def type_name(obj):
+    return obj.__type_name__
+
 # signals utilities
 def usignal(name, *args, **kwargs):
     """

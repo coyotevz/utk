@@ -40,7 +40,7 @@ _curses_colours = {
 
 
 class Screen(BaseScreen, RealTerminal):
-    __gtype_name__ = "UtkCursesScreen"
+    __type_name__ = "UtkCursesScreen"
 
     def __init__(self):
         BaseScreen.__init__(self)

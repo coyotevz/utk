@@ -11,15 +11,16 @@
 """
 
 
+from utk.ulib import uproperty
 from utk.container import Container
-from utk.utils import gproperty, Requisition
+from utk.utils import Requisition
 
 
 class Bin(Container):
-    __gtype_name__ = "UtkBin"
+    __type_name__ = "UtkBin"
 
     # properties
-    gproperty("child", object)
+    child = uproperty(object)
 
     def __init__(self):
         self._child = None
@@ -27,8 +28,6 @@ class Bin(Container):
 
     def get_child(self):
         return self._child
-
-    child = property(get_child)
 
     # "add" signal handler
     def do_add(self, child):

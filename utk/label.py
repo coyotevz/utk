@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 
+from utk.ulib import uproperty
 from utk.misc import Misc
-from utk.utils import gproperty, Requisition
+from utk.utils import Requisition
 from utk.canvas import TextCanvas, BlankCanvas
 
 
 class Label(Misc):
-    __gtype_name__ = "UtkLabel"
+    __type_name__ = "UtkLabel"
 
     # properties
-    gproperty("text", str)
+    uproperty("text", str)
 
     def __init__(self, text=""):
         super(Label, self).__init__()

@@ -12,7 +12,7 @@
 
 import logging
 
-import glib
+from utk.ulib import MainLoop
 from utk.label import Label
 from utk.box import VBox, HBox
 from utk.window import Window
@@ -26,7 +26,7 @@ _running_from_pytest = False
 main_loops = []
 
 def main():
-    loop = glib.MainLoop()
+    loop = MainLoop()
     main_loops.append(loop)
 
     loop.run()

@@ -16,7 +16,7 @@
 import logging
 
 from utk.container import Container
-from utk.utils import gproperty
+from utk.ulib import uproperty
 from utk.utils import BoxChild, Requisition, Rectangle
 from utk.constants import ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL
 from utk.constants import PACK_START, PACK_END
@@ -25,13 +25,13 @@ from utk.canvas import SolidCanvas
 log = logging.getLogger("utk.box")
 
 class Box(Container):
-    __gtype_name__ = "UtkBox"
+    __type_name__ = "UtkBox"
 
     # properties
-    gproperty("orientation", str)
-    gproperty("spacing", int, minimum=0,
+    uproperty("orientation", str)
+    uproperty("spacing", int, minimum=0,
               blurb="The amount of space between children")
-    gproperty("homogeneous", bool, default=False,
+    uproperty("homogeneous", bool, default=False,
               blurb="Whether the children should be all the same size.")
 
     def __init__(self, spacing=0, homogeneous=False, orientation=ORIENTATION_HORIZONTAL):
@@ -353,7 +353,7 @@ class HBox(Box):
 
     All children are allocated the same height.
     """
-    __gtype_name__ = "UtkHBox"
+    __type_name__ = "UtkHBox"
 
     def __init__(self, spacing=0, homogeneous=False):
         super(HBox, self).__init__(spacing, homogeneous, ORIENTATION_HORIZONTAL)
@@ -375,7 +375,7 @@ class VBox(Box):
 
     All children are allocated the same width.
     """
-    __gtype_name__ = "UtkVBox"
+    __type_name__ = "UtkVBox"
 
     def __init__(self, spacing=0, homogeneous=False):
         super(VBox, self).__init__(spacing, homogeneous, ORIENTATION_VERTICAL)
