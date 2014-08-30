@@ -25,6 +25,7 @@ from loop import (
 from properties import (
     uproperty,
     PropertiedObject,
+    UnknowedProperty,
 )
 
 # some shortcuts to work with main context
@@ -62,7 +63,7 @@ def type_name(obj):
     return obj.__type_name__
 
 # signals utilities
-def usignal(name, *args, **kwargs):
+def usignal(name, default=None, flag=SIGNAL_RUN_LAST, override=False):
     """
     Add a UObject signal to the current object.
     """
@@ -72,23 +73,14 @@ def usignal(name, *args, **kwargs):
     finally:
         del frame
 
+    
     signals = f_locals.setdefault('__signals__', {})
 
-    if args and args[0] == 'override':
+    if override:
         signals[name] = 'override'
     else:
-        retval = kwargs.get('retval', None)
-        if retval is None:
-            default_flags = SIGNAL_RUN_FIRST
-        else:
-            default_flags = SIGNAL_RUN_LAST
-
-        flags = kwargs.get('flags', default_flags)
-        if retval is not None and flags != SIGNAL_RUN_LAST:
-            raise TypeError(
-                "You cannot use a return value without setting flags to "
-                "ulib.SIGNAL_RUN_LAST")
-        signals[name] = (flags, retval, args)
+        signals[name] = {'handler': default,
+                         'flag': flag}
 
 
 # properties utilities

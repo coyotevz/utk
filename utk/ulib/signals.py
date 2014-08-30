@@ -268,10 +268,8 @@ def _get_signal_configuration(configuration):
                     conf['override'] = True
                 else:
                     conf['handler'] = elem
-            elif elem is None:
-                conf['handler'] = None
             else:
-                raise ValueError("_get_signal_configuration can't handle '%s'"
+                raise ValueError("_get_signal_configuration can't handler '%r'"
                                  % elem)
     elif isinstance(configuration, bool):
         conf['handler'] = configuration

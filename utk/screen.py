@@ -7,7 +7,7 @@ import termios
 import logging
 
 from utk import ulib
-from utk.ulib import UObject, type_name
+from utk.ulib import UObject, usignal, type_name
 from utk.canvas import SolidCanvas
 from utk.utils import int_scale, StoppingContext
 from utk.constants import PRIORITY_REDRAW
@@ -578,9 +578,9 @@ class BaseScreen(UObject):
     # signals
     usignal("start")
     usignal("stop")
-    usignal("update-palette-entry", str, object, object, object, object)
+    usignal("update-palette-entry")
     usignal("clear")
-    usignal("get-cols-rows", retval=object)
+    usignal("get-cols-rows")
     usignal("draw-screen")
 
     def __init__(self):

@@ -10,7 +10,7 @@
     :license: LGPL2 or later (see README/COPYING/LICENSE)
 """
 
-from utk.ulib import uproperty
+from utk.ulib import uproperty, UnknowedProperty
 from utk.utils import clamp
 from utk.widget import Widget
 
@@ -28,10 +28,10 @@ class Misc(Widget):
     __type_name__ = "UtkMisc"
 
     # properties
-    uproperty("xalign", float)
-    uproperty("yalign", float)
-    uproperty("xpad", int)
-    uproperty("ypad", int)
+    xalign = uproperty(ptype=float)
+    yalign = uproperty(ptype=float)
+    xpad = uproperty(ptype=int)
+    ypad = uproperty(ptype=int)
 
     def __init__(self):
         super(Misc, self).__init__()
@@ -84,37 +84,27 @@ class Misc(Widget):
 
         self.thaw_notify()
 
-
-    xalign = property(lambda x: x._xalign,
-                      lambda x,v: x.set_alignment(xalign=v))
-    yalign = property(lambda x: x._yalign,
-                      lambda x,v: x.set_alignment(yalign=v))
-    xpad = property(lambda x: x._xpad,
-                    lambda x,v: x.set_padding(xpad=v))
-    ypad = property(lambda x: x._ypad,
-                    lambda x,v: x.set_padding(ypad=v))
-
     ## get/set gproperties
-    def do_get_property(self, prop):
-        if prop.name == "xalign":
+    def _get_property(self, prop):
+        if prop == "xalign":
             return self._xalign
-        elif prop.name == "yalign":
+        elif prop == "yalign":
             return self._yalign
-        elif prop.name == "xpad":
+        elif prop == "xpad":
             return self._xpad
-        elif prop.name == "ypad":
+        elif prop == "ypad":
             return self._ypad
         else:
-            return super(Misc, self).do_get_property(prop)
+            raise UnknowedProperty(prop)
 
-    def do_set_property(self, prop, value):
-        if prop.name == "xalign":
+    def _set_property(self, prop, value):
+        if prop == "xalign":
             self.set_alignment(xalign=value)
-        elif prop.name == "yalign":
+        elif prop == "yalign":
             self.set_alignment(yalign=value)
-        elif prop.name == "xpad":
+        elif prop == "xpad":
             self.set_padding(xpad=value)
-        elif prop.name == "ypad":
+        elif prop == "ypad":
             self.set_padding(ypad=value)
         else:
-            super(Misc, self).do_set_property(prop, value)
+            raise UnknowedProperty(prop, value)

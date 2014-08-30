@@ -16,7 +16,7 @@
 import logging
 
 from utk.container import Container
-from utk.ulib import uproperty
+from utk.ulib import uproperty, UnknowedProperty
 from utk.utils import BoxChild, Requisition, Rectangle
 from utk.constants import ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL
 from utk.constants import PACK_START, PACK_END
@@ -28,13 +28,15 @@ class Box(Container):
     __type_name__ = "UtkBox"
 
     # properties
-    uproperty("orientation", str)
-    uproperty("spacing", int, minimum=0,
-              blurb="The amount of space between children")
-    uproperty("homogeneous", bool, default=False,
-              blurb="Whether the children should be all the same size.")
+    orientation = uproperty(ptype=str)
+    spacing = uproperty(ptype=int, min=0,
+                        blurb="The amount of space between children")
+    homogeneous = uproperty(ptype=bool, default=False,
+                            blurb="Whether the children should be all the "\
+                                  "same size.")
 
-    def __init__(self, spacing=0, homogeneous=False, orientation=ORIENTATION_HORIZONTAL):
+    def __init__(self, spacing=0, homogeneous=False,
+                 orientation=ORIENTATION_HORIZONTAL):
         super(Box, self).__init__()
         self._childs = []
         self._orientation = orientation
@@ -49,8 +51,6 @@ class Box(Container):
     def get_orientation(self):
         return self._orientation
 
-    orientation = property(get_orientation, set_orientation)
-
     def set_spacing(self, spacing):
         """Sets the 'spacing' property of @box, which is the
         number of chars to place between children of @box.
@@ -63,8 +63,6 @@ class Box(Container):
     def get_spacing(self):
         return self._spacing
 
-    spacing = property(get_spacing, set_spacing)
-
     def set_homogeneous(self, homogeneous):
         if self._homogeneous != homogeneous:
             self._homogeneous = homogeneous
@@ -73,8 +71,6 @@ class Box(Container):
 
     def get_homogeneous(self):
         return self._homogeneous
-
-    homogeneous = property(get_homogeneous, set_homogeneous)
 
     def _pack(self, widget, expand, fill, padding, pack_type):
         child = BoxChild(widget, padding, expand, fill, pack_type)
@@ -323,26 +319,25 @@ class Box(Container):
                 y -= (child_height + self.spacing)
 
     # get/set gproperties
-    def do_get_property(self, prop):
-        if prop.name == "orientation":
+    def _get_property(self, prop):
+        if prop == "orientation":
             return self.orientation
-        elif prop.name == "spacing":
+        elif prop == "spacing":
             return self.spacing
-        elif prop.name == "homogeneous":
+        elif prop == "homogeneous":
             return self.homogeneous
         else:
-            return super(Box, self).do_get_property(prop)
+            raise UnknowedProperty(prop)
 
-    def do_set_property(self, prop, value):
-        if prop.name == "orientation":
+    def _set_property(self, prop, value):
+        if prop == "orientation":
             self.set_orientation(value)
-        elif prop.name == "spacing":
+        elif prop == "spacing":
             self.set_spacing(value)
-        elif prop.name == "homogeneous":
+        elif prop == "homogeneous":
             self.set_homogeneous(value)
         else:
-            super(Box, self).do_set_property(prop, value)
-
+            raise UnknowedProperty(prop, value)
 
 class HBox(Box):
     """

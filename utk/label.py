@@ -10,7 +10,7 @@ class Label(Misc):
     __type_name__ = "UtkLabel"
 
     # properties
-    uproperty("text", str)
+    text = uproperty(ptype=str)
 
     def __init__(self, text=""):
         super(Label, self).__init__()
@@ -32,8 +32,6 @@ class Label(Misc):
             self.queue_resize()
             self.queue_draw()
 
-    text = property(get_text, set_text)
-
     # "size-request" signal handler
     def do_size_request(self):
         text_lines = self.text.split('\n')
@@ -53,15 +51,15 @@ class Label(Misc):
                                  cols=self._allocation.width,
                                  rows=self._allocation.height)
 
-    # do get/set gproperties
-    def do_get_property(self, prop):
-        if prop.name == "text":
+    # get/set gproperties
+    def _get_property(self, prop):
+        if prop == "text":
             return self.get_text()
         else:
-            return super(Label, self).do_get_property(prop)
+            raise UnknowedProperty(prop)
 
-    def do_set_property(self, prop, value):
-        if prop.name == "text":
+    def _set_property(self, prop, value):
+        if prop == "text":
             self.set_text(value)
         else:
-            super(Label, self).do_set_property(prop, value)
+            raise UnknowedProperty(prop, value)

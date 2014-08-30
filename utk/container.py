@@ -27,12 +27,12 @@ class Container(Widget):
     __type_name__ = "UtkContainer"
 
     # properties
-    uproperty("border-width", int)
+    border_width = uproperty(ptype=int)
 
     # signals
-    usignal("add", object)
-    usignal("remove", object)
-    usignal("foreach", object, object, bool)
+    usignal("add")
+    usignal("remove")
+    usignal("foreach")
     usignal("check-resize")
 
     def __init__(self):
@@ -51,8 +51,6 @@ class Container(Widget):
 
     def get_border_width(self):
         return self._border_width
-
-    border_width = property(get_border_width, set_border_width)
 
     # container methods
     def add(self, widget):
@@ -124,16 +122,17 @@ class Container(Widget):
 
 
     ## get/set gproperties
-    def do_get_property(self, prop):
-        if prop.name == "border-width":
+    def _get_property(self, prop):
+        if prop == "border-width":
             return self.get_border_width()
         else:
-            return super(Container, self).do_get_property(prop)
+            raise UnknowedProperty(prop)
 
-    def do_set_property(self, prop, value):
-        if prop.name == "border-width":
+    def _set_property(self, prop, value):
+        if prop == "border-width":
             self.set_border_width(value)
         else:
+            raise UnknowedProperty(prop, value)
             super(Container, self).do_set_property(prop, value)
 
 

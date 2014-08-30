@@ -36,8 +36,8 @@ class Widget(UObject):
     __type_name__ = "UtkWidget"
 
     #properties
-    name = uproperty(str)
-    parent = uproperty(object)
+    name = uproperty(ptype=str)
+    parent = uproperty(ptype=object)
     visible = uproperty(ptype=bool, default=False)
 
     #signals
@@ -47,10 +47,10 @@ class Widget(UObject):
     usignal("unmap")
     usignal("realize")
     usignal("unrealize")
-    usignal("size-request", retval=object)
-    usignal("size-allocate", object, flags=SIGNAL_RUN_FIRST)
+    usignal("size-request")
+    usignal("size-allocate", flag=SIGNAL_RUN_FIRST)
 
-    usignal("parent-set", object)
+    usignal("parent-set")
 
     _toplevel = False
 
@@ -398,6 +398,7 @@ class Widget(UObject):
             widget = widget._parent
             yield widget
 
+    # TODO: Review the following properties
     @property
     def is_toplevel(self):
         return self._toplevel
@@ -478,24 +479,24 @@ class Widget(UObject):
 
     ## get/set gproperties
     def _get_property(self, prop):
-        if prop.name == "name":
+        if prop == "name":
             return self.get_name()
-        elif prop.name == "parent":
+        elif prop == "parent":
             return self._parent
-        elif prop.name == "visible":
+        elif prop == "visible":
             return self._visible
         else:
-            raise AttributeError("unknown property %s" % prop.name) # pragma: no cover
+            raise UnknowedProperty(prop)
 
     def _set_property(self, prop, value):
-        if prop.name == "name":
+        if prop == "name":
             self.set_name(value)
-        elif prop.name == "parent":
+        elif prop == "parent":
             if value is None:
                 self.unparent()
             else:
                 self.set_parent(value)
-        elif prop.name == "visible":
+        elif prop == "visible":
             self.set_visible(value)
         else:
-            raise AttributeError("unknown property %s" % prop.name) # pragma: no cover
+            raise UnknowedProperty(prop, value)
