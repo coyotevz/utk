@@ -100,11 +100,14 @@ from signals import SignaledMeta
 from properties import PropertiedMeta
 
 class UObjectMeta(SignaledMeta, PropertiedMeta):
-    pass
+
+    def __init__(cls, classname, bases, ns):
+        SignaledMeta.__init__(cls, classname, bases, ns)
+        PropertiedMeta.__init__(cls, classname, bases, ns)
 
 # main class to inherit
 class UObject(object):
     __metaclass__= UObjectMeta
 
 # remove metaclasses from namespace
-del SignaledMeta, PropertiedMeta
+#del SignaledMeta, PropertiedMeta

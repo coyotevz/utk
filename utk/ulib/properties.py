@@ -43,6 +43,7 @@ def install_property(cls, uprop):
     props[uprop.name] = uprop
     install_signal(cls, "notify::%s" % uprop.name, default_cb=False)
     setattr(cls, '_decl_properties', props)
+    _install_properties_api(cls)
 
 def _install_properties(cls):
 
@@ -63,6 +64,11 @@ class PropertiedMeta(type):
 
 class PropertiedObject(object):
     __metaclass__ = PropertiedMeta
+
+def _install_properties_api(cls):
+
+    if hasattr(cls, '_properties_api'):
+        return
 
     _freezed = False
     _thaw = set()
@@ -94,6 +100,15 @@ class PropertiedObject(object):
         for pname in self._thaw:
             self.emit("notify::%s" % pname)
         self._thaw.clear()
+
+    api_attrs = dict(locals())
+    api = ('_freezed', '_thaw', 'get_property', 'set_property', 'notify',
+           'freeze_notify', 'thaw_notify')
+
+    for attr in api:
+        setattr(cls, attr, api_attrs[attr])
+
+    cls._properties_api = True
 
 
 class FreezedContext(object):

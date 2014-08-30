@@ -254,7 +254,7 @@ class Widget(UObject):
         self._requisition = requisition
         return requisition
 
-    def do_size_request(self):
+    def do_size_request(self, req):
         """Default 'size-request' handler implementation `useless`."""
         self._requisition = Requisition(0, 0)
         return self._requisition
@@ -343,6 +343,9 @@ class Widget(UObject):
         self.emit("parent-set", old_parent)
         self.notify("parent")
         self.thaw_notify()
+
+    def do_parent_set(self, old_parent=None):
+        pass
 
     def set_visible(self, value):
         """Sets the visibility state of @widget. Note that settings this to

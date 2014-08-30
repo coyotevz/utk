@@ -14,7 +14,7 @@
 import logging
 
 from utk import ulib
-from utk.ulib import usignal, uproperty
+from utk.ulib import usignal, uproperty, UnknowedProperty
 from utk.widget import Widget
 from utk.canvas import SolidCanvas
 from utk.constants import RESIZE_PARENT, RESIZE_QUEUE, RESIZE_IMMEDIATE, PRIORITY_RESIZE
@@ -133,7 +133,6 @@ class Container(Widget):
             self.set_border_width(value)
         else:
             raise UnknowedProperty(prop, value)
-            super(Container, self).do_set_property(prop, value)
 
 
     def get_resize_container(self):

@@ -105,6 +105,9 @@ class Window(Bin):
                 self.size_allocate(self._allocation)
             self.queue_screen_draw()
 
+    def do_event(self):
+        pass
+
     def compute_configure_request(self):
         log.debug("%s::compute_configure_request()", self.name)
         if not self._screen.started:
