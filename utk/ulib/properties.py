@@ -21,16 +21,22 @@ class uproperty(object):
         return self.set(obj, value)
 
     def get(self, obj):
-        try:
-            return obj._get_property(self.name)
-        except UnknowedProperty:
-            return super(obj.__class__, obj)._get_property(self.name)
+        cls = obj.__class__
+        while hasattr(cls, '_decl_properties'):
+            try:
+                return cls._get_property(obj, self.name)
+            except UnknowedProperty:
+                cls = cls.__base__
+        raise ValueError(self.name)
 
     def set(self, obj, value):
-        try:
-            return obj._set_property(self.name, value)
-        except UnknowedProperty:
-            return super(obj.__class__, obj)._set_property(self.name, value)
+        cls = obj.__class__
+        while hasattr(cls, '_decl_properties'):
+            try:
+                return cls._set_property(obj, self.name, value)
+            except UnknowedProperty:
+                cls = cls.__base__
+        raise ValueError(self.name, value)
 
 
 class UnknowedProperty(Exception):
@@ -72,6 +78,12 @@ def _install_properties_api(cls):
 
     _freezed = False
     _thaw = set()
+
+    def _get_property(self, pname):
+        raise ValueError("don't have %s property" % pname)
+
+    def _set_property(self, pname, value):
+        raise ValueError("don't have %s property" % pname)
 
     def get_property(self, pname):
         if pname in self._decl_properties:
