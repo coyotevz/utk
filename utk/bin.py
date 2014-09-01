@@ -52,7 +52,7 @@ class Bin(Container):
             callback(self._child, data)
 
     # "size-request" signal handler
-    def do_size_request(self):
+    def do_size_request(self, widget):
         if self._child:
             req = self._child.size_request()
             if self.border_width:
@@ -62,7 +62,7 @@ class Bin(Container):
         return Requisition(self.border_width*2, self.border_width*2)
 
     # "size-allocate" signal handler
-    def do_size_allocate(self, allocation):
+    def do_size_allocate(self, widget, allocation):
         self._allocation = allocation
         if self._child and self._child.is_visible:
             child_alloc = allocation._replace(

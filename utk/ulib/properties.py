@@ -6,6 +6,7 @@
 """
 
 from signals import install_signal
+from utils import unnorm
 
 
 class uproperty(object):
@@ -58,7 +59,7 @@ def _install_properties(cls):
     for attrname, attrvalue in attrs.iteritems():
         if isinstance(attrvalue, uproperty):
             if not attrvalue.name:
-                attrvalue.name = attrname
+                attrvalue.name = unnorm(attrname)
             install_property(cls, attrvalue)
 
 class PropertiedMeta(type):

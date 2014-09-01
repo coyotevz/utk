@@ -71,7 +71,7 @@ class Window(Bin):
         Widget.do_map(self)
 
     # "realize" signal handler
-    def do_realize(self):
+    def do_realize(self, *args):
         # ensure widget tree is properly size allocated
         if self._allocation is None:
             # FIXME: This branch is never excecuted

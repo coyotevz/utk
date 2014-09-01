@@ -14,7 +14,7 @@ import logging
 
 import utk
 from utk.ulib import UObject, type_name, SIGNAL_RUN_FIRST
-from utk.ulib import usignal, uproperty
+from utk.ulib import usignal, uproperty, UnknowedProperty
 from utk.constants import STATE_NORMAL
 from utk.utils import Rectangle, Requisition
 from utk.canvas import SolidCanvas
@@ -215,7 +215,7 @@ class Widget(UObject):
             if self.parent:
                 self.parent.canvas.add_child(self.canvas)
 
-    def do_realize(self):
+    def do_realize(self, widget):
         """Default 'realize' handler implementation `useless`."""
         assert self.canvas is None
         self._realized = True
@@ -254,7 +254,7 @@ class Widget(UObject):
         self._requisition = requisition
         return requisition
 
-    def do_size_request(self, req):
+    def do_size_request(self, widget):
         """Default 'size-request' handler implementation `useless`."""
         self._requisition = Requisition(0, 0)
         return self._requisition
@@ -293,7 +293,7 @@ class Widget(UObject):
             if size_changed:
                 self.canvas.resize(self._allocation.width, self._allocation.height)
 
-    def do_size_allocate(self, allocation):
+    def do_size_allocate(self, widget, allocation):
         """Default 'size-allocate' handler"""
         self._allocation = allocation
         if self.is_realized:
