@@ -41,9 +41,9 @@ class TestWidget(BaseTest):
 
     def test_unknown_property(self):
         w = self.widget()
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             w.set_property("unknown", None)
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             w.get_property("unknown-too")
 
     def test_initial_not_realized(self):

@@ -6,9 +6,8 @@ class NotifyPropCallback(object):
         self.prop = prop
         self.value = None
 
-    def __call__(self, widget, prop):
-        if prop.name == self.prop:
-            self.value = widget.get_property(self.prop)
+    def __call__(self, widget, *args):
+        self.value = widget.get_property(self.prop)
 
 
 class SignalEmitCallback(object):
