@@ -140,7 +140,7 @@ class Box(Container):
                 callback(child.widget, data)
 
     # "size-request" signal handler
-    def do_size_request(self, widget):
+    def do_size_request(self):
         req = Requisition(0, 0)
         visible_childs = 0
         for child in self._childs:
@@ -180,7 +180,7 @@ class Box(Container):
         return req
 
     # "size-allocate" signal handler
-    def do_size_allocate(self, widget, allocation):
+    def do_size_allocate(self, allocation):
         self._allocation = allocation
         if self.is_realized:
             self.canvas.move_resize(allocation.x, allocation.y,
