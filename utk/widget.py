@@ -13,8 +13,7 @@
 import logging
 
 import utk
-from utk.ulib import UObject, type_name, SIGNAL_RUN_FIRST
-from utk.ulib import usignal, uproperty, UnknowedProperty
+from ulib import UObject, usignal, type_name, SIGNAL_RUN_FIRST
 from utk.constants import STATE_NORMAL
 from utk.utils import Rectangle, Requisition
 from utk.canvas import SolidCanvas
@@ -34,11 +33,6 @@ class Widget(UObject):
         - event management methods
     """
     __type_name__ = "UtkWidget"
-
-    #properties
-    name = uproperty(ptype=str)
-    parent = uproperty(ptype=object)
-    visible = uproperty(ptype=bool, default=False)
 
     #signals
     usignal("show")
@@ -91,6 +85,8 @@ class Widget(UObject):
         if self._name:
             return self._name
         return type_name(self)
+
+    name = property(get_name, set_name)
 
     def show(self):
         """
@@ -344,8 +340,22 @@ class Widget(UObject):
         self.notify("parent")
         self.thaw_notify()
 
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, value):
+        if value is None:
+            self.unparent()
+        else:
+            self.set_parent(value)
+
     def do_parent_set(self, old_parent=None):
         pass
+
+    def get_visible(self):
+        return self._visible
 
     def set_visible(self, value):
         """Sets the visibility state of @widget. Note that settings this to
@@ -360,6 +370,8 @@ class Widget(UObject):
                 self.show()
             else:
                 self.hide()
+
+    visible = property(get_visible, set_visible)
 
     def set_child_visible(self, is_visible):
         """
@@ -479,27 +491,3 @@ class Widget(UObject):
                 self._container_queue_resize()
             else:
                 assert False, "Not reach this line"
-
-    ## get/set gproperties
-    def _get_property(self, prop):
-        if prop == "name":
-            return self.get_name()
-        elif prop == "parent":
-            return self._parent
-        elif prop == "visible":
-            return self._visible
-        else:
-            raise UnknowedProperty(prop)
-
-    def _set_property(self, prop, value):
-        if prop == "name":
-            self.set_name(value)
-        elif prop == "parent":
-            if value is None:
-                self.unparent()
-            else:
-                self.set_parent(value)
-        elif prop == "visible":
-            self.set_visible(value)
-        else:
-            raise UnknowedProperty(prop, value)

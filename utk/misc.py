@@ -10,7 +10,6 @@
     :license: LGPL2 or later (see README/COPYING/LICENSE)
 """
 
-from utk.ulib import uproperty, UnknowedProperty
 from utk.utils import clamp
 from utk.widget import Widget
 
@@ -26,12 +25,6 @@ class Misc(Widget):
     added around the widget.
     """
     __type_name__ = "UtkMisc"
-
-    # properties
-    xalign = uproperty(ptype=float)
-    yalign = uproperty(ptype=float)
-    xpad = uproperty(ptype=int)
-    ypad = uproperty(ptype=int)
 
     def __init__(self):
         super(Misc, self).__init__()
@@ -85,26 +78,34 @@ class Misc(Widget):
         self.thaw_notify()
 
     ## get/set gproperties
-    def _get_property(self, prop):
-        if prop == "xalign":
-            return self._xalign
-        elif prop == "yalign":
-            return self._yalign
-        elif prop == "xpad":
-            return self._xpad
-        elif prop == "ypad":
-            return self._ypad
-        else:
-            raise UnknowedProperty(prop)
+    @property
+    def xalign(self):
+        return self._xalign
 
-    def _set_property(self, prop, value):
-        if prop == "xalign":
-            self.set_alignment(xalign=value)
-        elif prop == "yalign":
-            self.set_alignment(yalign=value)
-        elif prop == "xpad":
-            self.set_padding(xpad=value)
-        elif prop == "ypad":
-            self.set_padding(ypad=value)
-        else:
-            raise UnknowedProperty(prop, value)
+    @xalign.setter
+    def xalign(self, value):
+        self.set_alignment(xalign=value)
+
+    @property
+    def yalign(self):
+        return self._yalign
+
+    @yalign.setter
+    def yalign(self, value):
+        self.set_alignment(yalign=value)
+
+    @property
+    def xpad(self):
+        return self._xpad
+
+    @xpad.setter
+    def xpad(self, value):
+        self.set_padding(xpad=value)
+
+    @property
+    def ypad(self):
+        return self._ypad
+
+    @ypad.setter
+    def ypad(self, value):
+        self.set_padding(ypad=value)

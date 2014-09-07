@@ -4,6 +4,7 @@
 *.coverage
 *.hgignore
 .hg
+ulib
 docs/_build
 dist
 build

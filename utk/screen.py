@@ -6,8 +6,8 @@ import time
 import termios
 import logging
 
-from utk import ulib
-from utk.ulib import UObject, usignal, type_name
+import ulib
+from ulib import UObject, usignal, type_name
 from utk.canvas import SolidCanvas
 from utk.utils import int_scale, StoppingContext
 from utk.constants import PRIORITY_REDRAW

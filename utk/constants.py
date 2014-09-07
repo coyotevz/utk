@@ -10,7 +10,7 @@
     :license: LGPL2 or later (see README/COPYING/LICENSE)
 """
 
-from utk import ulib
+import ulib
 
 # Priorities for redrawing and resizing...
 PRIORITY_HIGH = ulib.PRIORITY_HIGH            # -100

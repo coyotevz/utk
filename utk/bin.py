@@ -11,7 +11,6 @@
 """
 
 
-from utk.ulib import uproperty
 from utk.container import Container
 from utk.utils import Requisition
 
@@ -19,15 +18,17 @@ from utk.utils import Requisition
 class Bin(Container):
     __type_name__ = "UtkBin"
 
-    # properties
-    child = uproperty(object)
-
     def __init__(self):
         self._child = None
         super(Bin, self).__init__()
 
     def get_child(self):
         return self._child
+
+    def set_child(self, value):
+        self.add(child)
+
+    child = property(get_child, set_child)
 
     # "add" signal handler
     def do_add(self, child):
@@ -74,16 +75,3 @@ class Bin(Container):
             self._child.size_allocate(child_alloc)
         if self.is_realized:
             self.canvas.resize(allocation.width, allocation.height)
-
-    ## get/set gproperties
-    def do_get_property(self, prop):
-        if prop.name == "child":
-            return self._child
-        else:
-            return super(Bin, self).do_get_property(prop)
-
-    def do_set_property(self, prop, value):
-        if prop.name == "child":
-            self.add(value)
-        else:
-            super(Bin, self).do_set_property(prop, value)

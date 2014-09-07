@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from utk.ulib import uproperty
 from utk.misc import Misc
 from utk.utils import Requisition
 from utk.canvas import TextCanvas, BlankCanvas
@@ -8,9 +7,6 @@ from utk.canvas import TextCanvas, BlankCanvas
 
 class Label(Misc):
     __type_name__ = "UtkLabel"
-
-    # properties
-    text = uproperty(ptype=str)
 
     def __init__(self, text=""):
         super(Label, self).__init__()
@@ -32,6 +28,8 @@ class Label(Misc):
             self.queue_resize()
             self.queue_draw()
 
+    text = property(get_text, set_text)
+
     # "size-request" signal handler
     def do_size_request(self):
         text_lines = self.text.split('\n')
@@ -50,16 +48,3 @@ class Label(Misc):
                                  top=self._allocation.y,
                                  cols=self._allocation.width,
                                  rows=self._allocation.height)
-
-    # get/set gproperties
-    def _get_property(self, prop):
-        if prop == "text":
-            return self.get_text()
-        else:
-            raise UnknowedProperty(prop)
-
-    def _set_property(self, prop, value):
-        if prop == "text":
-            self.set_text(value)
-        else:
-            raise UnknowedProperty(prop, value)

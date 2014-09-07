@@ -16,7 +16,6 @@
 import logging
 
 from utk.container import Container
-from utk.ulib import uproperty, UnknowedProperty
 from utk.utils import BoxChild, Requisition, Rectangle
 from utk.constants import ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL
 from utk.constants import PACK_START, PACK_END
@@ -27,14 +26,6 @@ log = logging.getLogger("utk.box")
 class Box(Container):
     __type_name__ = "UtkBox"
 
-    # properties
-    orientation = uproperty(ptype=str)
-    spacing = uproperty(ptype=int, min=0,
-                        blurb="The amount of space between children")
-    homogeneous = uproperty(ptype=bool, default=False,
-                            blurb="Whether the children should be all the "\
-                                  "same size.")
-
     def __init__(self, spacing=0, homogeneous=False,
                  orientation=ORIENTATION_HORIZONTAL):
         super(Box, self).__init__()
@@ -43,13 +34,18 @@ class Box(Container):
         self._spacing = spacing
         self._homogeneous = homogeneous
 
+    def get_orientation(self):
+        return self._orientation
+
     def set_orientation(self, orientation):
         assert orientation in (ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL)
         self._orientation = orientation
         self.notify("orientation")
 
-    def get_orientation(self):
-        return self._orientation
+    orientation = property(get_orientation, set_orientation)
+
+    def get_spacing(self):
+        return self._spacing
 
     def set_spacing(self, spacing):
         """Sets the 'spacing' property of @box, which is the
@@ -60,8 +56,11 @@ class Box(Container):
             self.notify("spacing")
             self.queue_resize()
 
-    def get_spacing(self):
-        return self._spacing
+    spacing = property(get_spacing, set_spacing,
+                       doc="The amount of space between childrens")
+
+    def get_homogeneous(self):
+        return self._homogeneous
 
     def set_homogeneous(self, homogeneous):
         if self._homogeneous != homogeneous:
@@ -69,8 +68,8 @@ class Box(Container):
             self.notify("homogeneous")
             self.queue_resize()
 
-    def get_homogeneous(self):
-        return self._homogeneous
+    homogeneous = property(get_homogeneous, set_homogeneous,
+            doc="Whether the children should be all the same size")
 
     def _pack(self, widget, expand, fill, padding, pack_type):
         child = BoxChild(widget, padding, expand, fill, pack_type)
@@ -317,27 +316,6 @@ class Box(Container):
                 child.widget.size_allocate(child_alloc)
                 x -= (child_width + self.spacing)
                 y -= (child_height + self.spacing)
-
-    # get/set gproperties
-    def _get_property(self, prop):
-        if prop == "orientation":
-            return self.orientation
-        elif prop == "spacing":
-            return self.spacing
-        elif prop == "homogeneous":
-            return self.homogeneous
-        else:
-            raise UnknowedProperty(prop)
-
-    def _set_property(self, prop, value):
-        if prop == "orientation":
-            self.set_orientation(value)
-        elif prop == "spacing":
-            self.set_spacing(value)
-        elif prop == "homogeneous":
-            self.set_homogeneous(value)
-        else:
-            raise UnknowedProperty(prop, value)
 
 class HBox(Box):
     """

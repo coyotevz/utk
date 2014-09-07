@@ -13,8 +13,8 @@
 
 import logging
 
-from utk import ulib
-from utk.ulib import usignal, uproperty, UnknowedProperty
+import ulib
+from ulib import usignal
 from utk.widget import Widget
 from utk.canvas import SolidCanvas
 from utk.constants import RESIZE_PARENT, RESIZE_QUEUE, RESIZE_IMMEDIATE, PRIORITY_RESIZE
@@ -25,9 +25,6 @@ _container_resize_queue = []
 
 class Container(Widget):
     __type_name__ = "UtkContainer"
-
-    # properties
-    border_width = uproperty(ptype=int)
 
     # signals
     usignal("add")
@@ -43,14 +40,16 @@ class Container(Widget):
         self._resize_mode = RESIZE_PARENT
         self._resize_pending = False
 
+    def get_border_width(self):
+        return self._border_width
+
     def set_border_width(self, border_width):
         if self._border_width != border_width:
             self._border_width = border_width
             self.notify("border-width")
             self.queue_resize()
 
-    def get_border_width(self):
-        return self._border_width
+    border_width = property(get_border_width, set_border_width)
 
     # container methods
     def add(self, widget):
@@ -119,21 +118,6 @@ class Container(Widget):
     def hide_all(self):
         self.hide()
         self.foreach(lambda w, d: w.hide_all())
-
-
-    ## get/set gproperties
-    def _get_property(self, prop):
-        if prop == "border-width":
-            return self.get_border_width()
-        else:
-            raise UnknowedProperty(prop)
-
-    def _set_property(self, prop, value):
-        if prop == "border-width":
-            self.set_border_width(value)
-        else:
-            raise UnknowedProperty(prop, value)
-
 
     def get_resize_container(self):
         for widget in self.ancesor_iter():
