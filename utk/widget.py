@@ -13,7 +13,7 @@
 import logging
 
 import utk
-from ulib import UObject, usignal, type_name, SIGNAL_RUN_FIRST
+from gulib import UObject, usignal, type_name, SIGNAL_RUN_FIRST
 from utk.constants import STATE_NORMAL
 from utk.utils import Rectangle, Requisition
 from utk.canvas import SolidCanvas

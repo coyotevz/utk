@@ -12,7 +12,7 @@
 
 import logging
 
-from ulib import usignal
+from gulib import usignal
 from utk.widget import Widget
 from utk.bin import Bin
 from utk.utils import Rectangle, Requisition

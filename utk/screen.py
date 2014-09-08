@@ -6,8 +6,8 @@ import time
 import termios
 import logging
 
-import ulib
-from ulib import UObject, usignal, type_name
+import gulib
+from gulib import UObject, usignal, type_name
 from utk.canvas import SolidCanvas
 from utk.utils import int_scale, StoppingContext
 from utk.constants import PRIORITY_REDRAW
@@ -757,7 +757,7 @@ class BaseScreen(UObject):
         """Signal this Screen to redraw in the next idle update"""
         log.debug("%s::queue_draw()", type_name(self))
         if not self._update_idle:
-            self._update_idle = ulib.idle_add(self.draw_screen_idle, priority=PRIORITY_REDRAW)
+            self._update_idle = gulib.idle_add(self.draw_screen_idle, priority=PRIORITY_REDRAW)
 
 
     def add_toplevel(self, widget):

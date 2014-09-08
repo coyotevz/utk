@@ -12,7 +12,7 @@
 
 import logging
 
-from ulib import MainLoop
+from gulib import MainLoop
 from utk.label import Label
 from utk.box import VBox, HBox
 from utk.window import Window

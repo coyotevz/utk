@@ -13,8 +13,8 @@
 
 import logging
 
-import ulib
-from ulib import usignal
+import gulib
+from gulib import usignal
 from utk.widget import Widget
 from utk.canvas import SolidCanvas
 from utk.constants import RESIZE_PARENT, RESIZE_QUEUE, RESIZE_IMMEDIATE, PRIORITY_RESIZE
@@ -146,7 +146,7 @@ class Container(Widget):
                           resize_container._resize_pending = True
                           if not _container_resize_queue:
                               log.debug("Adding idle_sizer to loop")
-                              ulib.idle_add(self._idle_sizer, priority=PRIORITY_RESIZE)
+                              gulib.idle_add(self._idle_sizer, priority=PRIORITY_RESIZE)
                           _container_resize_queue.append(resize_container)
                   elif resize_container._resize_mode == RESIZE_IMMEDIATE:
                       resize_container.check_resize()
