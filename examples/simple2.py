@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from functools import partial
+
 import utk
-import glib
+import gulib
 
 # create window and label widgets
 window = utk.Window()
@@ -32,13 +34,13 @@ def add_label():
     vbox.pack_start(l3)
     l3.show()
 
-glib.timeout_add_seconds(2, add_label)
-glib.timeout_add_seconds(3, hide_widget, vbox)
-glib.timeout_add_seconds(4, show_widget, vbox)
-glib.timeout_add_seconds(5, hide_widget, l2)
-glib.timeout_add_seconds(6, hide_widget, l1)
-glib.timeout_add_seconds(7, lambda *x: vbox.show_all())
-glib.timeout_add_seconds(8, utk.main_quit)
+gulib.timeout_add_seconds(2, add_label)
+gulib.timeout_add_seconds(3, partial(hide_widget, vbox))
+gulib.timeout_add_seconds(4, partial(show_widget, vbox))
+gulib.timeout_add_seconds(5, partial(hide_widget, l2))
+gulib.timeout_add_seconds(6, partial(hide_widget, l1))
+gulib.timeout_add_seconds(7, lambda *x: vbox.show_all())
+gulib.timeout_add_seconds(8, utk.main_quit)
 
 # run main loop
 utk.main()
