@@ -23,10 +23,12 @@
 Terminal Escape Sequences for input and display
 """
 
+from __future__ import unicode_literals
+
 import re
 
 from utk import str_util
-from gulib.compat import u, bytes
+from gulib.compat import bytes
 
 within_double_byte = str_util.within_double_byte
 
@@ -36,8 +38,8 @@ IBMPC_ON = "\x1b[11m"
 IBMPC_OFF = "\x1b[10m"
 
 DEC_TAG = "0"
-DEC_SPECIAL_CHARS = u('▮◆▒␉␌␍␊°±␤␋┘┐┌└┼⎺⎻─⎼⎽├┤┴┬│≤≥π≠£·')
-ALT_DEC_SPECIAL_CHARS = u("_`abcdefghijklmnopqrstuvwxyz{|}~")
+DEC_SPECIAL_CHARS = '▮◆▒␉␌␍␊°±␤␋┘┐┌└┼⎺⎻─⎼⎽├┤┴┬│≤≥π≠£·'
+ALT_DEC_SPECIAL_CHARS = "_`abcdefghijklmnopqrstuvwxyz{|}~"
 
 DEC_SPECIAL_CHARMAP = {}
 assert len(DEC_SPECIAL_CHARS) == len(ALT_DEC_SPECIAL_CHARS), \
@@ -47,8 +49,8 @@ assert len(DEC_SPECIAL_CHARS) == len(ALT_DEC_SPECIAL_CHARS), \
 for c, alt in zip(DEC_SPECIAL_CHARS, ALT_DEC_SPECIAL_CHARS):
     DEC_SPECIAL_CHARMAP[ord(c)] = SO + alt + SI
 
-SAFE_ASCII_DEC_SPECIAL_RE = re.compile(u("^[ -~%s]*$") % DEC_SPECIAL_CHARS)
-DEC_SPECIAL_RE = re.compile(u("[%s]") % DEC_SPECIAL_CHARS)
+SAFE_ASCII_DEC_SPECIAL_RE = re.compile("^[ -~%s]*$" % DEC_SPECIAL_CHARS)
+DEC_SPECIAL_RE = re.compile("[%s]" % DEC_SPECIAL_CHARS)
 
 
 ###################
