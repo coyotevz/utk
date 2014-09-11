@@ -40,7 +40,10 @@ DEC_SPECIAL_CHARS = u('▮◆▒␉␌␍␊°±␤␋┘┐┌└┼⎺⎻─�
 ALT_DEC_SPECIAL_CHARS = u("_`abcdefghijklmnopqrstuvwxyz{|}~")
 
 DEC_SPECIAL_CHARMAP = {}
-assert len(DEC_SPECIAL_CHARS) == len(ALT_DEC_SPECIAL_CHARS), repr((DEC_SPECIAL_CHARS, ALT_DEC_SPECIAL_CHARS))
+assert len(DEC_SPECIAL_CHARS) == len(ALT_DEC_SPECIAL_CHARS), \
+    "Error: %r\nlen: %d\n%r\nlen: %d" % (
+    DEC_SPECIAL_CHARS, len(DEC_SPECIAL_CHARS),
+    ALT_DEC_SPECIAL_CHARS, len(ALT_DEC_SPECIAL_CHARS))
 for c, alt in zip(DEC_SPECIAL_CHARS, ALT_DEC_SPECIAL_CHARS):
     DEC_SPECIAL_CHARMAP[ord(c)] = SO + alt + SI
 
