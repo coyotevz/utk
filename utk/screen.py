@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 import time
 import termios
@@ -8,7 +9,6 @@ import logging
 
 import gulib
 from gulib import UObject, usignal, type_name
-from utk.canvas import SolidCanvas
 from utk.utils import int_scale, StoppingContext
 from utk.constants import PRIORITY_REDRAW
 
