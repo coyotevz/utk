@@ -24,7 +24,7 @@ from utk.utils import calc_width, calc_text_pos
 
 log = logging.getLogger("utk.raw_display")
 
-_trans_table = "?"*32 + "".join([chr(x) for x in xrange(32, 256)])
+_trans_table = "?"*32 + "".join([chr(x) for x in range(32, 256)])
 
 
 _term_files = (sys.stdout, sys.stdin)
@@ -308,7 +308,7 @@ class Screen(BaseScreen, RealTerminal):
                     self.flush()
                     k = 0
             self.flush()
-        except IOError, e:
+        except IOError as e:
             # ignore interrupted syscal
             if e.args[0] != 4:
                 raise
@@ -415,13 +415,13 @@ class Screen(BaseScreen, RealTerminal):
         assert self.started
 
         self._wait_for_input_ready(self._next_timeout)
-        self._next_timeout, keys, raw = self._input_iter.next()
+        self._next_timeout, keys, raw = next(self._input_iter)
 
         # Avoid pagging CPU at 100% when slowly resizing
         if keys == ['window resize'] and self.prev_input_resize:
             while True:
                 self._wait_for_input_ready(self.resize_wait)
-                self._next_timeout, keys, raw2 = self._input_iter.next()
+                self._next_timeout, keys, raw2 = next(self._input_iter)
                 raw += raw2
                 if keys != ['window resize']:
                     break
@@ -448,7 +448,7 @@ class Screen(BaseScreen, RealTerminal):
         fd_list = [self._term_input_file.fileno(), self._resize_pipe_rd]
         if self.gpm_mev is not None:
             fd_list.append(self.gpm_mev.stdout.fileno())
-        return df_list
+        return fd_list
 
     def get_input_nonblocking(self):
         """Return a (next_input_timeout, keys_pressed, raw_keycodes)
@@ -464,7 +464,7 @@ class Screen(BaseScreen, RealTerminal):
         (a floating point number) if there is no input waiting.
         """
         assert self.started
-        return self._input_iter.next()
+        return next(self._input_iter)
 
 
     def _run_input_iter(self):
@@ -487,7 +487,7 @@ class Screen(BaseScreen, RealTerminal):
                     processed.extend(run)
             except escape.MoreInputRequired:
                 k = len(original_codes) - len(codes)
-                yield (self.complete_wait, processed, original_code[:k])
+                yield (self.complete_wait, processed, original_codes[:k])
                 empty_resize_pipe()
                 original_codes = codes
                 processed = []
