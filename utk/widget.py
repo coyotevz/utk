@@ -357,7 +357,7 @@ class Widget(UObject):
     def get_visible(self):
         return self._visible
 
-    def set_visible(self, value):
+    def set_visible(self, visible):
         """Sets the visibility state of @widget. Note that settings this to
         %True doesn't mean the widget is actually viewable.
 
