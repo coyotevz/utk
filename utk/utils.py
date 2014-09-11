@@ -16,17 +16,21 @@
 from collections import namedtuple
 import codecs
 
-from ulib.compat import string_type, u
+from gulib.compat import string_type, u
 from utk import escape
 from utk import str_util
 
 # bring str_util functions into our namespace
 calc_text_pos = str_util.calc_text_pos
+calc_width = str_util.calc_width
 
 def clamp(value, minimum, maximum):
     value = min(value, maximum)
     value = max(value, minimum)
     return value
+
+def isiterable(obj):
+    return hasattr(obj, '__iter__')
 
 # usefull structures
 Requisition = namedtuple("Requisition", "width height")

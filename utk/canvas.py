@@ -352,7 +352,7 @@ class TextCanvas(Canvas):
             i = 0
             row = []
             for (a, cs), run in attr_cs:
-                if attr_map and a in attr_amp:
+                if attr_map and a in attr_map:
                     a = attr_map[a]
                 row.append((a, cs, text[i:i+run]))
                 i += run
@@ -428,7 +428,7 @@ def shard_body_row(sbody):
     row = []
     for done_rows, content_iter, cview in sbody:
         if content_iter:
-            row.extend(content_iter.next())
+            row.extend(next(content_iter))
         else:
             # need to skip this unchanged canvas
             if row and isinstance(row[-1], int):
@@ -473,7 +473,7 @@ def shard_body(cviews, shard_tail, create_iter=True, iter_default=None):
     for col_gap, done_rows, content_iter, tail_cview in shard_tail:
         while col_gap:
             try:
-                cview = cviews_iter.next()
+                cview = next(cviews_iter)
             except StopIteration:
                 raise CanvasError("cviews do not fill gaps in shard_tail!!!")
             col += cview.cols
@@ -597,7 +597,7 @@ def shards_join(shard_lists):
     All shards lists must have the same number of rows.
     """
     shards_iters = [iter(sl) for sl in shard_lists]
-    shards_current = [i.next() for i in shards_iters]
+    shards_current = [next(i) for i in shards_iters]
 
     new_shards = []
     while True:
@@ -618,7 +618,7 @@ def shards_join(shard_lists):
             for i in range(len(shards_current)):
                 if shards_current[i].rows > 0:
                     continue
-                shards_current[i] = shards_iters[i].next()
+                shards_current[i] = next(shards_iters[i])
         except StopIteration:
             break
     return new_shards

@@ -9,9 +9,7 @@ import curses
 import _curses
 
 import utk
-from utk.screen import BaseScreen, RealTerminal, AttrSpec, \
-    UNPRINTABLE_TRANS_TABLE
-from utk.compat import bytes, PYTHON3
+from utk.screen import BaseScreen, RealTerminal
 
 log = logging.getLogger("utk.curses_display")
 

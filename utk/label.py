@@ -2,7 +2,7 @@
 
 from utk.misc import Misc
 from utk.utils import Requisition
-from utk.canvas import TextCanvas, BlankCanvas
+from utk.canvas import TextCanvas
 
 
 class Label(Misc):
@@ -33,7 +33,7 @@ class Label(Misc):
     # "size-request" signal handler
     def do_size_request(self):
         text_lines = self.text.split('\n')
-        text_width = max(map(len, text_lines))
+        text_width = max(list(map(len, text_lines)))
         req = Requisition(text_width, len(text_lines))
         req = req._replace(width=self.xpad+req.width+self.xpad,
                            height=self.ypad+req.height+self.ypad)
