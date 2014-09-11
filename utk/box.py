@@ -185,8 +185,8 @@ class Box(Container):
         if self.is_realized:
             self.canvas.move_resize(allocation.x, allocation.y,
                                     allocation.width, allocation.height)
-        visible_childs = len(filter(lambda c: c.widget.is_visible, self._childs))
-        expanded_childs = len(filter(lambda c: c.expand, self._childs))
+        visible_childs = len([c for c in self._childs if c.widget.is_visible])
+        expanded_childs = len([c for c in self._childs if c.expand])
         log.debug("UtkBox::visible_childs: %d", visible_childs)
         log.debug("UtkBox::expanded_childs: %d", expanded_childs)
         if visible_childs < 1:
