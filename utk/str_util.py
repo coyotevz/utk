@@ -19,14 +19,13 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 # Urwid web site: http://excess.org/urwid/
-from __future__ import print_function
 
 import re
 
-from utk.compat import bytes, B, ord2
+from gulib.compat import bytes, ustring, u, b
 
-SAFE_ASCII_RE = re.compile(u"^[ -~]*$")
-SAFE_ASCII_BYTES_RE = re.compile(B("^[ -~]*$"))
+SAFE_ASCII_RE = re.compile(u("^[ -~]*$"))
+SAFE_ASCII_BYTES_RE = re.compile(b("^[ -~]*$"))
 
 _byte_encoding = None
 
@@ -92,7 +91,7 @@ def decode_one( text, pos ):
     Return (ordinal at pos, next position) for UTF-8 encoded text.
     """
     assert isinstance(text, bytes), text
-    b1 = ord2(text[pos])
+    b1 = ord(text[pos])
     if not b1 & 0x80:
         return b1, pos+1
     error = ord("?"), pos+1
@@ -101,7 +100,7 @@ def decode_one( text, pos ):
     if lt < 2:
         return error
     if b1 & 0xe0 == 0xc0:
-        b2 = ord2(text[pos+1])
+        b2 = ord(text[pos+1])
         if b2 & 0xc0 != 0x80:
             return error
         o = ((b1&0x1f)<<6)|(b2&0x3f)
@@ -111,10 +110,10 @@ def decode_one( text, pos ):
     if lt < 3:
         return error
     if b1 & 0xf0 == 0xe0:
-        b2 = ord2(text[pos+1])
+        b2 = ord(text[pos+1])
         if b2 & 0xc0 != 0x80:
             return error
-        b3 = ord2(text[pos+2])
+        b3 = ord(text[pos+2])
         if b3 & 0xc0 != 0x80:
             return error
         o = ((b1&0x0f)<<12)|((b2&0x3f)<<6)|(b3&0x3f)
@@ -124,13 +123,13 @@ def decode_one( text, pos ):
     if lt < 4:
         return error
     if b1 & 0xf8 == 0xf0:
-        b2 = ord2(text[pos+1])
+        b2 = ord(text[pos+1])
         if b2 & 0xc0 != 0x80:
             return error
-        b3 = ord2(text[pos+2])
+        b3 = ord(text[pos+2])
         if b3 & 0xc0 != 0x80:
             return error
-        b4 = ord2(text[pos+2])
+        b4 = ord(text[pos+2])
         if b4 & 0xc0 != 0x80:
             return error
         o = ((b1&0x07)<<18)|((b2&0x3f)<<12)|((b3&0x3f)<<6)|(b4&0x3f)
@@ -154,7 +153,7 @@ def decode_one_right(text, pos):
     error = ord("?"), pos-1
     p = pos
     while p >= 0:
-        if ord2(text[p])&0xc0 != 0x80:
+        if ord(text[p])&0xc0 != 0x80:
             o, next = decode_one( text, p )
             return o, p-1
         p -=1
@@ -241,7 +240,7 @@ def is_wide_char(text, offs):
 
     text may be unicode or a byte string in the target _byte_encoding
     """
-    if isinstance(text, unicode):
+    if isinstance(text, ustring):
         o = ord(text[offs])
         return get_width(o) == 2
     assert isinstance(text, bytes)
@@ -257,12 +256,12 @@ def move_prev_char(text, start_offs, end_offs):
     Return the position of the character before end_offs.
     """
     assert start_offs < end_offs
-    if isinstance(text, unicode):
+    if isinstance(text, ustring):
         return end_offs-1
     assert isinstance(text, bytes)
     if _byte_encoding == "utf8":
         o = end_offs-1
-        while ord2(text[o])&0xc0 == 0x80:
+        while ord(text[o])&0xc0 == 0x80:
             o -= 1
         return o
     if _byte_encoding == "wide" and within_double_byte(text,
@@ -275,12 +274,12 @@ def move_next_char(text, start_offs, end_offs):
     Return the position of the character after start_offs.
     """
     assert start_offs < end_offs
-    if isinstance(text, unicode):
+    if isinstance(text, ustring):
         return start_offs+1
     assert isinstance(text, bytes)
     if _byte_encoding == "utf8":
         o = start_offs+1
-        while o<end_offs and ord2(text[o])&0xc0 == 0x80:
+        while o<end_offs and ord(text[o])&0xc0 == 0x80:
             o += 1
         return o
     if _byte_encoding == "wide" and within_double_byte(text,
@@ -301,13 +300,13 @@ def within_double_byte(text, line_start, pos):
     2 -- pos is on the 2nd half of a dbe char
     """
     assert isinstance(text, bytes)
-    v = ord2(text[pos])
+    v = ord(text[pos])
 
     if v >= 0x40 and v < 0x7f:
         # might be second half of big5, uhc or gbk encoding
         if pos == line_start: return 0
 
-        if ord2(text[pos-1]) >= 0x81:
+        if ord(text[pos-1]) >= 0x81:
             if within_double_byte(text, line_start, pos-1) == 1:
                 return 2
         return 0
@@ -316,7 +315,7 @@ def within_double_byte(text, line_start, pos):
 
     i = pos -1
     while i >= line_start:
-        if ord2(text[i]) < 0x80:
+        if ord(text[i]) < 0x80:
             break
         i -= 1
 
