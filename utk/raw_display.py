@@ -21,10 +21,11 @@ import utk
 from utk.screen import BaseScreen, RealTerminal, AttrSpec
 from utk import escape
 from utk.utils import calc_width, calc_text_pos
+from gulib.compat import b
 
 log = logging.getLogger("utk.raw_display")
 
-_trans_table = "?"*32 + "".join([chr(x) for x in range(32, 256)])
+_trans_table = b("?"*32 + "".join([chr(x) for x in range(32, 256)]))
 
 
 _term_files = (sys.stdout, sys.stdin)
@@ -252,7 +253,12 @@ class Screen(BaseScreen, RealTerminal):
             lasta = lastcs = None
             for (a, cs, run) in row:
                 if cs != 'U':
-                    run = run.translate(_trans_table)
+                    try:
+                        run = run.translate(_trans_table)
+                    except TypeError:
+                        print("run:", run)
+                        print("trans_table:", _trans_table)
+                        raise
 
                 if first or lasta != a:
                     o.append(attr_to_escape(a))

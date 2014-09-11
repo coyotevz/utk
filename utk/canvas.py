@@ -259,7 +259,7 @@ class Canvas(object):
             sbody = shard_body(shard.cviews, shard_tail)
 
             # output rows
-            for i in range(shard.rows):
+            for i in range(int(shard.rows)):
                 yield shard_body_row(sbody)
 
             # prepare next shard tail
@@ -294,7 +294,7 @@ class SolidCanvas(Canvas):
             rows = self.rows
 
         line = [(self._attr, self._cs, self._text*cols)]
-        for i in range(rows):
+        for i in range(int(rows)):
             yield line
 
     def __repr__(self):
