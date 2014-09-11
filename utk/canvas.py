@@ -359,7 +359,7 @@ class TextCanvas(Canvas):
             rows_done += 1
             yield row
         while rows_done < rows:
-            yield [(None, None, bytes().rjust(cols))]
+            yield [(None, None, str().rjust(cols))]
 
     def __repr__(self):
         return "<TextCanvas(%r, left=%d, top=%d, cols=%d, rows=%d)>" % (self._text, self.left, self.top, self.cols, self.rows)
@@ -379,7 +379,7 @@ class TextCanvas(Canvas):
             if w > maxcol:
                 raise CanvasError("Canvas text is wider than the maxcol specified \n%r\n%r\n%r" % (maxcol, widths, text))
             if w < maxcol:
-                text[i] = text[i] + bytes().rjust(maxcol-w)
+                text[i] = text[i] + str().rjust(maxcol-w)
             a_gap = len(text[i]) - rle_len(attr[i])
             if a_gap < 0:
                 raise CanvasError("Attribute extends beyond text \n%r\n%r" % (text[i], attr[i]))
@@ -405,7 +405,7 @@ class BlankCanvas(Canvas):
         def_attr = None
         if attr and None in attr:
             def_attr = attr[None]
-        line = [(def_attr, None, bytes().rjust(cols))]
+        line = [(def_attr, None, str().rjust(cols))]
         for i in range(rows):
             yield line
 
