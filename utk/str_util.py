@@ -142,7 +142,7 @@ def decode_one_uni(text, i):
     """
     decode_one implementation for unicode strings
     """
-    return ord2(text[i]), i+1
+    return ord(text[i]), i+1
 
 def decode_one_right(text, pos):
     """
@@ -150,7 +150,7 @@ def decode_one_right(text, pos):
     pos is assumed to be on the trailing byte of a utf-8 sequence.
     """
     assert isinstance(text, bytes), text
-    error = ord2("?"), pos-1
+    error = ord("?"), pos-1
     p = pos
     while p >= 0:
         if ord2(text[p])&0xc0 != 0x80:
