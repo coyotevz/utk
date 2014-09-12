@@ -9,11 +9,14 @@ import logging
 
 import gulib
 from gulib import UObject, usignal, type_name
+from gulib.compat import b, bytes3
 from utk.utils import int_scale, StoppingContext
 from utk.constants import PRIORITY_REDRAW
 
 log = logging.getLogger("utk.screen")
 
+# for replacing unprintable bytes with '?'
+UNPRINTABLE_TRANS_TABLE = b("?") * 32 + bytes3(range(32, 256))
 
 # AttrSpec internal values
 _BASIC_START = 0 # first index of basic color aliases

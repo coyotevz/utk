@@ -13,6 +13,8 @@
 import logging
 from collections import namedtuple
 
+from gulib.compat import bytes3
+
 from utk.utils import (
     Rectangle, calc_text_pos, apply_target_encoding, trim_text_attr_cs,
     rle_product, rle_len, rle_append_modify, calc_width, isiterable,
@@ -178,7 +180,6 @@ class Canvas(object):
 
     @property
     def shards(self):
-        #if self.is_dirty:
         self.calculate_shards()
         return self._shards
 
@@ -188,13 +189,11 @@ class Canvas(object):
 
         log.debug("calculating shards in %s <%x>", repr(self), id(self))
 
-        #if not self._shards:
         self._shards = [
             Shard(self.rows, [
                 CanvasView(0, 0, self.cols, self.rows, None, self)
             ])
         ]
-
 
         updates = None
         if self._update:
@@ -317,6 +316,9 @@ class TextCanvas(Canvas):
 
         self._attr = attr
         self._cs = cs
+
+        for t in text:
+            assert isinstance(t, bytes), "text must be bytes(), was %r" % type(t)
         self._text = text
 
         super(TextCanvas, self).__init__(left, top, cols, rows)
@@ -359,7 +361,7 @@ class TextCanvas(Canvas):
             rows_done += 1
             yield row
         while rows_done < rows:
-            yield [(None, None, str().rjust(cols))]
+            yield [(None, None, bytes().rjust(cols))]
 
     def __repr__(self):
         return "<TextCanvas(%r, left=%d, top=%d, cols=%d, rows=%d)>" % (self._text, self.left, self.top, self.cols, self.rows)
@@ -379,7 +381,7 @@ class TextCanvas(Canvas):
             if w > maxcol:
                 raise CanvasError("Canvas text is wider than the maxcol specified \n%r\n%r\n%r" % (maxcol, widths, text))
             if w < maxcol:
-                text[i] = text[i] + str().rjust(maxcol-w)
+                text[i] = text[i] + bytes().rjust(maxcol-w)
             a_gap = len(text[i]) - rle_len(attr[i])
             if a_gap < 0:
                 raise CanvasError("Attribute extends beyond text \n%r\n%r" % (text[i], attr[i]))
@@ -405,7 +407,7 @@ class BlankCanvas(Canvas):
         def_attr = None
         if attr and None in attr:
             def_attr = attr[None]
-        line = [(def_attr, None, str().rjust(cols))]
+        line = [(def_attr, None, bytes().rjust(cols))]
         for i in range(rows):
             yield line
 

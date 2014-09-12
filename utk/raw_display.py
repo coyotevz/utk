@@ -18,10 +18,12 @@ except ImportError:
     pass # windows
 
 import utk
-from utk.screen import BaseScreen, RealTerminal, AttrSpec
+from utk.screen import (
+    BaseScreen, RealTerminal, AttrSpec, UNPRINTABLE_TRANS_TABLE
+)
 from utk import escape
 from utk.utils import calc_width, calc_text_pos
-from gulib.compat import b
+from gulib.compat import b, PYTHON3
 
 log = logging.getLogger("utk.raw_display")
 
@@ -54,10 +56,13 @@ class Screen(BaseScreen, RealTerminal):
         fcntl.fcntl(self._resize_pipe_rd, fcntl.F_SETFL, os.O_NONBLOCK)
 
         self._pal_escape = {}
+        self._pal_attrspec = {}
 
         self.colors = 16 # FIXME: detect this
         self.has_underline = True # FIXME: detect this
-        self.bright_is_bold = os.environ.get('TERM', None) != "xterm"
+        term = os.environ.get('TERM', '')
+        self.bright_is_bold = not term.startswith("xterm")
+        self.back_color_erase = not term.startswith("screen")
 
         self.set_input_timeouts()
 
@@ -83,9 +88,9 @@ class Screen(BaseScreen, RealTerminal):
 
     def do_update_palette_entry(self, name, *attrspecs):
         # copy the attributes to a dictionary containing the escape seq.
-        self._pal_escape[name] = self._attrspec_to_escape(
-            attrspecs[{16: 0, 1: 1, 88: 2, 256: 3}[self.colors]]
-        )
+        a = attrspecs[{16: 0, 1: 1, 88: 2, 256: 3}[self.colors]]
+        self._pal_attrspec[name] = a
+        self._pal_escape[name] = self._attrspec_to_escape(a)
 
     # "start" signal handler
     def do_start(self):
@@ -147,7 +152,7 @@ class Screen(BaseScreen, RealTerminal):
         return x, y
 
     # "draw-screen" signal handler
-    def do_draw_screen(self):
+    def do_draw_screen2(self):
         assert self.started
 
         topcanvas = self.get_topcanvas()
@@ -223,7 +228,7 @@ class Screen(BaseScreen, RealTerminal):
         cy = 0
         for row in topcanvas.content():
             y += 1
-            if osb and osb[y] == row:
+            if False and osb and osb[y] == row:
                 # this row of the screen buffer matched what is
                 # currently displayed, so we can skip this line
                 sb.append(osb[y])
@@ -308,6 +313,8 @@ class Screen(BaseScreen, RealTerminal):
         try:
             k = 0
             for l in o:
+                if isinstance(l, bytes) and PYTHON3:
+                    l = l.decode('utf-8')
                 self.write(l)
                 k += len(l)
                 if k > 1024:
@@ -316,6 +323,178 @@ class Screen(BaseScreen, RealTerminal):
             self.flush()
         except IOError as e:
             # ignore interrupted syscal
+            if e.args[0] != 4:
+                raise
+
+        self._screen_buf = sb
+
+    # "draw-screen" signal handler
+    def do_draw_screen(self):
+        """Paint screen with rendered canvas."""
+        assert self.started
+
+        topcanvas = self.get_topcanvas()
+        maxcol, maxrow = self.get_cols_rows()
+
+        self._setup_G1()
+
+        if self._resized:
+            # handle resize before trying to draw screen
+            return
+
+        o = [escape.HIDE_CURSOR, self._attrspec_to_escape(AttrSpec('', ''))]
+
+        def partial_display():
+            # returns True if the screen is in partial display mode
+            # ie. only some rows belong to the display
+            return self._rows_used is not None
+
+        if not partial_display():
+            o.append(escape.CURSOR_HOME)
+
+        if self._screen_buf:
+            osb = self._screen_buf
+        else:
+            osb = []
+        sb = []
+        cy = self._cy
+        y = -1
+
+        def set_cursor_home():
+            if not partial_display():
+                return escape.set_cursor_position(0, 0)
+            return escape.CURSOR_HOME_COL + escape.move_cursor_up(cy)
+
+        def set_cursor_row(y):
+            if not partial_display():
+                return escape.set_cursor_position(0, y)
+            return escape.move_cursor_down(y - cy)
+
+        def set_cursor_position(x, y):
+            if not partial_display():
+                return escape.set_cursor_position(x, y)
+            if cy > y:
+                return ('\b' + escape.CURSOR_HOME_COL +
+                        escape.move_cursor_up(cy - y) +
+                        escape.move_cursor_right(x))
+            return ('\b' + escape.CURSOR_HOME_COL +
+                    escape.move_cursor_down(y - cy) +
+                    escape.move_cursor_right(x))
+
+        def is_blank_row(row):
+            if len(row) > 1:
+                return False
+            if row[0][2].strip():
+                return False
+            return True
+
+        def attr_to_escape(a):
+            if a in self._pal_escape:
+                return self._pal_escape[a]
+            elif a in self._palette:
+                self._pal_escape[a] = self._attrspec_to_escape(self._palette[a][0])
+                return self._pal_escape[a]
+            elif isinstance(a, AttrSpec):
+                return self._attrspec_to_escape(a)
+            # undefined attributes use default/default
+            return self._attrspec_to_escape(AttrSpec('default', 'default'))
+
+        def using_standout(a):
+            a = self._pal_attrspec.get(a, a)
+            return isinstance(a, AttrSpec) and a.standout
+
+        ins = None
+        o.append(set_cursor_home())
+        cy = 0
+        for row in topcanvas.content():
+            y += 1
+            if False and osb and osb[y] == row:
+                # this row of the scree buffer matched what is currently
+                # displayed, so we can skip this line
+                sb.append(osb[y])
+                continue
+
+            sb.append(row)
+
+            # leave blank lines off display when we are using the default
+            # screen buffer (allows partial screen)
+            if partial_display() and y > self._rows_used:
+                if is_blank_row(row):
+                    continue
+                self._rows_used = y
+
+            if y or partial_display():
+                o.append(set_cursor_position(0, y))
+            # after updating the line we will be just over the edge, but
+            # terminals still treat this as being on the same line
+            cy = y
+
+            whitespace_at_end = False
+            if row:
+                a, cs, run = row[-1]
+                if (run[-1:] == b(' ') and self.back_color_erase\
+                        and not using_standout(a)):
+                    whitespace_at_end = True
+                    row = row[:-1] + [(a, cs, run.rstrip(b(' ')))]
+                elif y == maxrow-1 and maxcol > 1:
+                    row, back, ins = _last_row(row)
+
+            first = True
+            lasta = lastcs = None
+            for (a, cs, run) in row:
+                assert isinstance(run, bytes) # canvases should render with bytes
+                if cs != 'U':
+                    run = run.translate(UNPRINTABLE_TRANS_TABLE)
+                if first or lasta != a:
+                    o.append(attr_to_escape(a))
+                    lasta = a
+                if first or lastcs != cs:
+                    assert cs in [None, "0", "U"], repr(cs)
+                    if lastcs == "U":
+                        o.append(escape.IBMPC_OFF)
+                    if cs is None:
+                        o.append(escape.SI)
+                    elif cs == "U":
+                        o.append(escape.IBMPC_ON)
+                    else:
+                        o.append(escape.SO)
+                    lastcs = cs
+                o.append(run)
+                first = False
+            if ins:
+                (inserta, insertcs, inserttext) = ins
+                ias = attr_to_escape(inserta)
+                assert insertcs in [None, "0", "U"], repr(insertcs)
+                if cs is None:
+                    icss = escape.SI
+                elif cs == "U":
+                    icss = escape.IBMPC_ON
+                else:
+                    icss = escape.SO
+                o += ["\x08" * back,
+                      ias, icss,
+                      escape.INSERT_ON, inserttext,
+                      escape.INSERT_OFF]
+                if cs == "U":
+                    o.append(escape.IBMPC_OFF)
+            if whitespace_at_end:
+                o.append(escape.ERASE_IN_LINE_RIGHT)
+
+        if topcanvas.cursor is not None:
+            x, y = topcanvas.cursor
+            o += [set_cursor_position(x, y),
+                  escape.SHOW_CURSOR]
+            self._cy = y
+
+        # Write list of commands to terminal
+        try:
+            for l in o:
+                if isinstance(l, bytes) and PYTHON3:
+                    l = l.decode('utf-8')
+                self.write(l)
+            self.flush()
+        except IOError as e:
+            # ignore interrupted syscall
             if e.args[0] != 4:
                 raise
 

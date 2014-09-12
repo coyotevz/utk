@@ -162,7 +162,7 @@ def get_encoding_mode():
     return str_util.get_byte_encoding()
 
 
-def apply_target_encoding( s ):
+def apply_target_encoding(s):
     """
     Return (encoded byte string, character set rle).
     """
