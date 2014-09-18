@@ -22,8 +22,8 @@ class Widget(UObject):
     signals for the widgets:
         - methods to realize, map and show widgets
         - methods to manage size request and size allocation
-        - methods to initiate widget redraw
         - methods to deal with the widget's place in the widget hierarchy
+        - methods to initiate widget redraw
     """
     __type_name__ = "UtkWidget"
 
@@ -220,7 +220,7 @@ class Widget(UObject):
         """
         Default 'size-request' implementation `useless`.
         """
-        # Builds and return Requisition base on widget contents
+        # Builds and return Requisition based on widget contents
 
     def size_allocate(self, allocation):
         """
@@ -350,3 +350,42 @@ class Widget(UObject):
     def get_path(self):
         names = [p.name for p in self.ancesor_iter()] + [self.name]
         return ".".join(names)
+
+    # widget draw/redraw/resize routines
+
+    def queue_draw(self):
+        """
+        This method is equivalent to calling the :meth:queue_draw_area() method
+        for the entire area of widget.
+        """
+        if self.is_realized:
+            self.queue_draw_area(*self._allocation)
+
+    def queue_draw_area(self, x, y, width, height):
+        """
+        Invalidates the rectangular area of the widget specified by x, y, width
+        and height by calling :meth:Canvas.invalidate_rect() method on the
+        widget's canvas. Once the main loop becomes idle (after the current
+        batch of events has been processed), the canvas will receive draw
+        instruction.
+        Normally you would use this method on widget implementations.
+        """
+        if not self.is_realized:
+            return
+
+        for ancesor in self.ancesor_iter():
+            if not ancesor.is_realized:
+                return
+
+        log.debug("%s::queue_draw_area(x=%d, y=%d, width=%d, height=%d)",
+                  self.name, x, y, width, height)
+
+        self._canvas.invalidate_rect(Rectangle(x, y, width, height))
+
+    def queue_resize(self):
+        """
+        Flags a widget to have its size renegotiated; should be called when a
+        widget for some reason has a new size request.
+        This method is only for use in widget implementation.
+        """
+        pass
