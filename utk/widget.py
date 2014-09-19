@@ -11,7 +11,7 @@
 import logging
 
 from gulib import UObject, usignal, type_name
-from utk.utils import Rectangle, Requisition
+from utk.utils import Rectangle
 
 log = logging.getLogger("utk.widget")
 
@@ -71,7 +71,7 @@ class Widget(UObject):
         if not self.is_visible:
             log.debug("{}::show()".format(self.name))
             self.emit("show")
-            slf.notify("visible")
+            self.notify("visible")
 
     def do_show(self):
         """Default 'show' implementation."""
@@ -188,11 +188,16 @@ class Widget(UObject):
         # - Mark as unrealized with self._realized = False
         # - Destroy created resources in do_realize().
 
-
     def get_visible(self):
+        """
+        Return if a widget is marked as visible
+        """
         return self._visible
 
     def set_visible(self, visible):
+        """
+        Set visibility of a widget calling corresponding methods.
+        """
         if visible != self._visible:
             if visible:
                 self.show()
@@ -200,7 +205,6 @@ class Widget(UObject):
                 self.hide()
 
     visible = property(get_visible, set_visible)
-
 
     # size negotiation
 
@@ -229,7 +233,7 @@ class Widget(UObject):
         """
         old_alloc = self._allocation
         allocation = allocation._replace(width=max(allocation.width, 1),
-                                        height=max(allocation.height, 1))
+                                         height=max(allocation.height, 1))
 
         if old_alloc:
             size_changed = (old_alloc.width != allocation.width) or \
@@ -257,7 +261,6 @@ class Widget(UObject):
         if self.is_realized:
             # Handle canvas move/resize
             pass
-
 
     # widget name handling
 
