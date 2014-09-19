@@ -797,7 +797,7 @@ class BaseScreen(UObject):
 
     def get_topcanvas(self):
         # TODO: Build canvas tree
-        return self._toplevels[0].canvas
+        return self._toplevels[0]._canvas
 
 
 _default_screen = None

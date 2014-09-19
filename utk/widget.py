@@ -45,7 +45,7 @@ class Widget(UObject):
     def __init__(self):
         self._name = None
         self._requisition = None
-        self._allocation = Rectangle()
+        self._allocation = None
         self._parent = None
         self._canvas = None
 
