@@ -37,6 +37,16 @@ class Container(Widget):
 
     border_width = property(get_border_width, set_border_width)
 
+    # "map" handler
+    def do_map(self):
+
+        def map_childrens(child, data):
+            if child.is_visible and not child.is_mapped:
+                child.map()
+        self.foreach(map_childrens)
+        super(Container, self).do_map()
+
+    # "unmap" handler
     def do_unmap(self):
         super(Container, self).do_unmap()
         self.foreach(lambda w, d: w.unmap())

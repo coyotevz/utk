@@ -33,18 +33,15 @@ class TestWidget(utk.widget.Widget):
         return (0, 0)
 
 w = utk.Window()
+label = utk.Label("test")
 w.show()
-#tw = TestWidget()
-#w.add(tw)
-#tw.show()
 
 def quit():
     utk.main_quit()
 
 def add():
-    box = TestWidget()
-    w.add(box)
-    box.show()
+    w.add(label)
+    label.show()
 
 gulib.timeout_add_seconds(3, add)
 gulib.timeout_add_seconds(4, quit)

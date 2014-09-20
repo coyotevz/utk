@@ -37,17 +37,19 @@ class Label(Misc):
     def do_size_request(self):
         text_lines = self.text.split('\n')
         text_width = max([len(l) for l in text_lines])
-        req = Requisition(text_width, len(text_lines))
-        req = req._replace(width=self.xpad+req.width+self.xpad,
-                           height=self.ypad+req.height+self.ypad)
-        return req
+        return Requisition(self.xpad*2+text_width,
+                           self.ypad*2+len(text_lines))
 
     # "realize" signal handler
     def do_realize(self):
-        assert self.canvas is None
+        assert self._canvas is None
         self._realized = True
-        self.canvas = TextCanvas(text=[self._text],
-                                 left=self._allocation.x,
-                                 top=self._allocation.y,
-                                 cols=self._allocation.width,
-                                 rows=self._allocation.height)
+        self._canvas = TextCanvas(text=[self._text],
+                                  left=self._allocation.x,
+                                  top=self._allocation.y,
+                                  cols=self._allocation.width,
+                                  rows=self._allocation.height)
+
+    def do_unrealize(self):
+        self._realized = False
+        self._canvas = None

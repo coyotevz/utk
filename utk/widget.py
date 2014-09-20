@@ -175,7 +175,7 @@ class Widget(UObject):
         # - Mark as realized with self._realized = True
         # - Create canvas for this widget with size from self._allocation
         # - Add created canvas to parent._canvas
-        raise NotImplementedError("You must implement do_realize()")
+        raise NotImplementedError("You must implement do_realize() on {}".format(self.name))
 
     def unrealize(self):
         """
@@ -194,7 +194,7 @@ class Widget(UObject):
         # Implementators:
         # - Mark as unrealized with self._realized = False
         # - Destroy created resources in do_realize().
-        raise NotImplementedError("You must implement do_unrealize()")
+        raise NotImplementedError("You must implement do_unrealize() on {}".format(self.name))
 
     def get_visible(self):
         """
@@ -248,7 +248,7 @@ class Widget(UObject):
         Default 'size-request' implementation `useless`.
         """
         # Builds and return Requisition based on widget contents
-        raise NotImplementedError("You must implement do_size_request()")
+        raise NotImplementedError("You must implement do_size_request() on {}".format(self.name))
 
     def size_allocate(self, allocation):
         """
