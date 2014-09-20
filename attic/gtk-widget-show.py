@@ -26,3 +26,6 @@ connect_signals(w2)
 w3 = gtk.Label("label-1")
 w3.set_name("w3")
 connect_signals(w3)
+
+t.add(w1)
+w1.add(w2)
