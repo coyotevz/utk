@@ -152,11 +152,12 @@ class Widget(object):
             raise Warning("Can't set a parent on a toplevel widget")
         self._parent = parent
 
-        # check realized/mapped invariants
-        if parent.is_realized:
-            self.realize()
-        if parent.is_mapped and self.is_visible:
-            self.map()
+        if self.is_visible:
+            # check realized/mapped invariants
+            if parent.is_realized:
+                self.realize()
+            if parent.is_mapped:
+                self.map()
 
     def unparent(self):
         if not self.parent:
