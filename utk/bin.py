@@ -45,7 +45,7 @@ class Bin(Container):
             child_alloc = allocation._replace(
                 x=self.border_width,
                 y=self.border_width,
-                width=max(1, (allocation.width-self.border_width*2))
+                width=max(1, (allocation.width-self.border_width*2)),
                 height=max(1, (allocation.height-self.border_width*2))
             )
             self._child.size_allocate(child_alloc)
