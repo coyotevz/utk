@@ -20,6 +20,7 @@ class Container(Widget):
     # signals
     usignal("add")
     usignal("remove")
+    usignal("foreach")
 
     def __init__(self):
         super(Container, self).__init__()
@@ -35,6 +36,10 @@ class Container(Widget):
             #TODO: call queue resize
 
     border_width = property(get_border_width, set_border_width)
+
+    def do_unmap(self):
+        super(Container, self).do_unmap()
+        self.foreach(lambda w, d: w.unmap())
 
     def add(self, widget):
         if widget.parent:

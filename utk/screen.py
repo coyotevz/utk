@@ -634,6 +634,8 @@ class BaseScreen(UObject):
         """Restore the screen."""
         if not self.started:
             return
+        for w in self._toplevels:
+            w.destroy()
         log.debug("%s::stop()", type_name(self))
         self.emit("stop")
         if self.started:
@@ -773,6 +775,8 @@ class BaseScreen(UObject):
 
     def queue_draw(self):
         """Signal this Screen to redraw in the next idle update"""
+        if not self.started:
+            return
         log.debug("%s::queue_draw()", type_name(self))
         if not self._update_idle:
             self._update_idle = gulib.idle_add(self.draw_screen_idle, priority=PRIORITY_REDRAW)

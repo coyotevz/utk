@@ -53,6 +53,8 @@ class Widget(UObject):
         self._visible = False
         self._mapped = False
         self._realized = False
+        self._needs_request = True
+        self._needs_alloc = True
 
         super(Widget, self).__init__()
 
@@ -61,6 +63,8 @@ class Widget(UObject):
     is_visible = property(lambda s: s._visible)
     is_mapped = property(lambda s: s._mapped)
     is_realized = property(lambda s: s._realized)
+    needs_request = property(lambda s: s._needs_request)
+    needs_alloc = property(lambda s: s._needs_alloc)
 
     # visualizing process
 
@@ -77,7 +81,7 @@ class Widget(UObject):
         """Default 'show' implementation."""
         if not self.is_visible:
             self._visible = True
-            if (self.parent and self.parent.is_mapped) or self.is_toplevel:
+            if self.parent and self.parent.is_mapped:
                 self.map()
 
     def hide(self):
@@ -152,11 +156,13 @@ class Widget(UObject):
         """
         if not self.is_realized:
             if not self.parent and not self.is_toplevel:
-                raise Warning("""Calling Widget.realize() on a widget that
-                isn't inside a parent wigdet, is not going to work. Widgets
-                must be inside a parent before realizing them.""")
+                raise Warning("Calling Widget.realize() on a widget that isn't"
+                        " inside a parent wigdet, is not going to work."
+                        " Widgets must be inside a parent before realizing"
+                        " them.")
             if self.parent and not self.parent.is_realized:
                 self.parent.realize()
+            self.check_resize()
             log.debug("{}::realize()".format(self.name))
             self.emit("realize")
 
@@ -208,6 +214,19 @@ class Widget(UObject):
 
     visible = property(get_visible, set_visible)
 
+    def destroy(self):
+        """Destroys a widget
+
+        When a widget is destroyed, it will break any references it holds to
+        other objects. If a widget is inside a container, the widget will be
+        removed from the container. If the widget is toplevel it will be
+        removed for the list of toplevels.
+        """
+        if self.parent:
+            self.unparent()
+        if self.is_realized:
+            self.unrealize()
+
     # size negotiation
 
     def size_request(self):
@@ -217,10 +236,12 @@ class Widget(UObject):
         The size request is not necessary the size a widget will actually be
         allocated.
         """
-        requisition = self.emit("size-request")
-        log.debug("{}::size_request({})".format(self.name, requisition))
-        self._requisition = requisition
-        return requisition
+        if not self._needs_request and self._requisition:
+            return self._requisition
+        log.debug("{}::size_request()".format(self.name))
+        self._requisition = self.emit("size-request")
+        self._needs_request = False
+        return self._requisition
 
     def do_size_request(self):
         """
@@ -234,6 +255,9 @@ class Widget(UObject):
         Sets the size allocation for the widget using the Rectangle() specified
         by allocation.
         """
+        if not self._needs_alloc and self._allocation:
+            return
+
         old_alloc = self._allocation
         allocation = allocation._replace(width=max(allocation.width, 1),
                                          height=max(allocation.height, 1))
@@ -251,6 +275,7 @@ class Widget(UObject):
 
         log.debug("{}::size_allocate({})".format(self.name, tuple(allocation)))
         self.emit("size-allocate", allocation)
+        self._needs_alloc = False
 
         if self.is_mapped:
             # Handle reallocation on canvas
@@ -264,6 +289,12 @@ class Widget(UObject):
         if self.is_realized:
             # Handle canvas move/resize
             pass
+
+    def check_resize(self):
+        if self.parent:
+            self.parent._needs_request = self.needs_request
+            self.parent._needs_alloc = self.needs_alloc
+            self.parent.check_resize()
 
     # widget name handling
 
@@ -294,11 +325,13 @@ class Widget(UObject):
         self.emit("parent-set", None)
         self.notify("parent")
 
-        if parent.is_realized:
-            self.realize()
-        if parent.is_visible and self.is_visible and parent.is_mapped:
-            self.map()
-            # Signal canvas to update
+        if self.is_visible:
+            # check realized/mapped invariants
+            if parent.is_realized:
+                self.realize()
+            if parent.is_mapped:
+                self.map()
+                # Signal canvas to update
 
     def unparent(self):
         """
@@ -316,12 +349,6 @@ class Widget(UObject):
             self._parent = None
             self.emit("parent-set", old_parent)
             self.notify("parent")
-
-    def do_parent_set(self, old_parent):
-        """
-        Default 'parent-set' implementation `useless`
-        """
-        raise NotImplementedError("You must implement do_parent_set()")
 
     @property
     def parent(self):

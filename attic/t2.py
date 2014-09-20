@@ -3,6 +3,8 @@
 import utk
 import gulib
 
+utk.configure_logging("/dev/pts/1")
+
 class TestWidget(utk.widget.Widget):
     __type_name__ = "CustomWidget"
 
@@ -13,18 +15,28 @@ class TestWidget(utk.widget.Widget):
     def do_realize(self):
         "Do nothing"
         self._realized = True
-        pass
+
+    def do_unrealize(self):
+        "Do nothing"
+        self._realized = False
 
     def do_map(self):
         "Do nothing"
         self._mapped = True
-        pass
+
+    def do_unmap(self):
+        "Do nothing"
+        self._mapped = False
+
+    def do_size_request(self):
+        "Do nothing"
+        return (0, 0)
 
 w = utk.Window()
 w.show()
-tw = TestWidget()
-w.add(tw)
-tw.show()
+#tw = TestWidget()
+#w.add(tw)
+#tw.show()
 
 def quit():
     utk.main_quit()
