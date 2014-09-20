@@ -2,6 +2,20 @@
 
 """
 Sintesis del proceso de visualizacion de un widget.
+
+show() -> map() -> realize()
+
+Algunas condiciones:
+~~~~~~~~~~~~~~~~~~~~
+- Un widget no puede estar `mapped` si antes no esta `realized`
+- Un widget no puede estar `realized` si no lo esta antes su padre.
+- Un widget no puede estar `mapped` si antes no lo esta su padre.
+- El método `show()` en un widget trata de `mapear` el widget, en caso que no
+  pueda solo lo marca para se sea mostrado en cuando su padre sea `mapeado`.
+- Un widget que es `realized` o `mapped` debe corroborar que sus hijos visibles
+  sean también `realized` o `mapped`.
+- Cuando a un widget se le asigna un padre debe verificar si se tiene que
+  `realize` o `map`.
 """
 
 
