@@ -1,0 +1,40 @@
+/* Sample utk widgets style */
+
+UtkWindow {
+  background-color: black;
+  foreground-color: white;
+  title-alignment: center;
+}
+
+UtkDialog {
+  background-color: cyan;
+  foreground-color: light-white;
+  border-char: "-+|+-+|+";
+}
+
+UtkDialog UtkEntry:focus {
+  foreground-color: light-red;
+}
+
+UtkDialog #special {
+  border-color: black;
+  border-top-char: "─";
+  border-top-right-char: "┐";
+  border-right-char: "│";
+  border-bottom-right-char: "┘";
+  border-bottom-char: "─";
+  border-bottom-left-char: "└";
+  border-left-char: "│";
+  border-top-left-char: "┌";
+}
+
+UtkDialog #crossed {
+  border-top-middle-char: "┬";
+  border-right-middle-char: "┤";
+  border-bottom-middle-char: "┴";
+  border-left-middle-char: "├";
+  border-cross-char: "┼";
+}
+
+/* vim:ft=css:sw=2
+ */
