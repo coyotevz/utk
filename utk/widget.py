@@ -214,6 +214,19 @@ class Widget(UObject):
 
     visible = property(get_visible, set_visible)
 
+    def show_all(self):
+        """
+        Recursively shows the widget, and any child widget (if the widget has
+        children).
+        """
+        self.show()
+
+    def hide_all(self):
+        """
+        Recursively hides the widget and its child (if any).
+        """
+        self.hide()
+
     def destroy(self):
         """Destroys a widget
 

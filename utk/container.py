@@ -51,6 +51,14 @@ class Container(Widget):
         super(Container, self).do_unmap()
         self.foreach(lambda w, d: w.unmap())
 
+    def show_all(self):
+        self.foreach(lambda w, d: w.show_all())
+        self.show()
+
+    def hide_all(self):
+        self.foreach(lambda w, d: w.hide_all())
+        self.hide()
+
     def add(self, widget):
         if widget.parent:
             raise Warning("Attemping to add a widget to a container, but the "
