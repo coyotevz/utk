@@ -33,6 +33,7 @@ class TestWidget(utk.widget.Widget):
         return (0, 0)
 
 w = utk.Window()
+w.set_border_width(2)
 label = utk.Label("test")
 w.show()
 

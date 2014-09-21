@@ -238,8 +238,8 @@ class Widget(UObject):
         """
         if not self._needs_request and self._requisition:
             return self._requisition
-        log.debug("{}::size_request()".format(self.name))
-        self._requisition = self.emit("size-request")
+        self._requisition = req = self.emit("size-request")
+        log.debug("{}::size_request({})".format(self.name, req))
         self._needs_request = False
         return self._requisition
 
@@ -255,9 +255,6 @@ class Widget(UObject):
         Sets the size allocation for the widget using the Rectangle() specified
         by allocation.
         """
-        if not self._needs_alloc and self._allocation:
-            return
-
         old_alloc = self._allocation
         allocation = allocation._replace(width=max(allocation.width, 1),
                                          height=max(allocation.height, 1))
@@ -270,7 +267,7 @@ class Widget(UObject):
         else:
             size_changed = position_changed = True
 
-        if not size_changed and not position_changed:
+        if not size_changed and not position_changed and not self._needs_alloc:
             return
 
         log.debug("{}::size_allocate({})".format(self.name, tuple(allocation)))
