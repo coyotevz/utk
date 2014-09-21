@@ -35,6 +35,8 @@ class TestWidget(utk.widget.Widget):
 w = utk.Window()
 w.set_border_width(2)
 label = utk.Label("test")
+label.set_alignment(1, 0)
+label.set_padding(1, 1)
 w.show()
 
 def quit():

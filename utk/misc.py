@@ -33,6 +33,12 @@ class Misc(Widget):
         self._xpad = 0
         self._ypad = 0
 
+    def get_left_top(self):
+        alloc = self._allocation
+        req = self._requisition
+        return (int((alloc.width - req.width) * self.xalign) + alloc.x,
+                int((alloc.height - req.height) * self.yalign) + alloc.y)
+
     def set_alignment(self, xalign=None, yalign=None):
         _changed = False
         self.freeze_notify()

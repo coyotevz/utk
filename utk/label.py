@@ -26,7 +26,7 @@ class Label(Misc):
         if text != self._text:
             self._text = text
             if self.is_realized:
-                self.canvas._text = [self._text]
+                self._canvas._text = [self._text]
             self.notify("text")
             self.queue_resize()
             self.queue_draw()
@@ -44,11 +44,17 @@ class Label(Misc):
     def do_realize(self):
         assert self._canvas is None
         self._realized = True
+        #self._canvas = TextCanvas(text=[self._text],
+        #                          left=self._allocation.x,
+        #                          top=self._allocation.y,
+        #                          cols=self._allocation.width,
+        #                          rows=self._allocation.height)
+
+        req = self._requisition
+        left, top = self.get_left_top()
         self._canvas = TextCanvas(text=[self._text],
-                                  left=self._allocation.x,
-                                  top=self._allocation.y,
-                                  cols=self._allocation.width,
-                                  rows=self._allocation.height)
+                                  left=left, top=top,
+                                  cols=req.width, rows=req.height)
         self._canvas.set_parent_widget(self.parent)
 
     def do_unrealize(self):
