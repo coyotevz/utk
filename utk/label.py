@@ -49,6 +49,7 @@ class Label(Misc):
                                   top=self._allocation.y,
                                   cols=self._allocation.width,
                                   rows=self._allocation.height)
+        self._canvas.set_parent_widget(self.parent)
 
     def do_unrealize(self):
         self._realized = False

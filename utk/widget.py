@@ -126,7 +126,7 @@ class Widget(UObject):
         if not self.is_mapped:
             self._mapped = True
             self._canvas.show()
-            # Mark canvas to be redrawn
+            self.queue_draw()
 
     def unmap(self):
         """
@@ -144,7 +144,7 @@ class Widget(UObject):
         if self.is_mapped:
             self._mapped = False
             self._canvas.hide()
-            # Mark canvas to be redrawn
+            self.queue_draw()
 
     def realize(self):
         """
@@ -423,7 +423,11 @@ class Widget(UObject):
         log.debug("%s::queue_draw_area(x=%d, y=%d, width=%d, height=%d)",
                   self.name, x, y, width, height)
 
-        self._canvas.invalidate_rect(Rectangle(x, y, width, height))
+        self._canvas.invalidate_area(Rectangle(x, y, width, height))
+
+        toplevel = self.get_toplevel()
+        if toplevel.is_toplevel:
+            toplevel.queue_screen_draw()
 
     def queue_resize(self):
         """

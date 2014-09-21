@@ -44,7 +44,7 @@ def add():
     w.add(label)
     label.show()
 
-gulib.timeout_add_seconds(3, add)
+gulib.timeout_add_seconds(2, add)
 gulib.timeout_add_seconds(4, quit)
 
 

@@ -94,6 +94,9 @@ class Canvas(object):
         self.unparent()
         parent.add_child(self)
 
+    def set_parent_widget(self, widget):
+        self.set_parent(widget._canvas)
+
     def unparent(self):
         if self._parent:
             self._parent.remove_child(self)
