@@ -50,12 +50,16 @@ def add():
 def sett():
     label.set_text("new content")
 
-def move():
-    label.xalign = 0
+def movex():
+    label.xalign = 1
+
+def movey():
+    label.yalign = 0
+
 
 gulib.timeout_add_seconds(2, add)
-#gulib.timeout_add_seconds(4, sett)
-gulib.timeout_add_seconds(6, move)
+gulib.timeout_add_seconds(4, movex)
+gulib.timeout_add_seconds(6, movey)
 gulib.timeout_add_seconds(8, quit)
 
 

@@ -104,49 +104,52 @@ class Misc(Widget):
                   self.yalign*(alloc.height-2*self.ypad-req[1]))
         return (left, top)
 
+    def _move_resize_content(self):
+        # TODO: Recalculate available size for content
+        left, top = self.get_left_top()
+        self._content_canvas.move_to(left, top)
+        self.queue_draw()
+
     def set_alignment(self, xalign=None, yalign=None):
-        _changed = False
-        self.freeze_notify()
+        _changed = []
         if xalign is not None:
             xalign = clamp(xalign, 0, 1)
             if xalign != self._xalign:
-                self.notify("xalign")
                 self._xalign = xalign
-                _changed = True
+                _changed.append("xalign")
 
         if yalign is not None:
             yalign = clamp(yalign, 0, 1)
             if yalign != self._yalign:
-                self.notify("yalign")
                 self._yalign = yalign
-                _changed = True
+                _changed.append("yalign")
 
         if _changed:
-            self.queue_draw()
-
-        self.thaw_notify()
+            with self.freeze_notify():
+                for prop in _changed:
+                    self.notify(prop)
+                self._move_resize_content()
 
     def set_padding(self, xpad=None, ypad=None):
-        _changed = False
-        self.freeze_notify()
+        _changed = []
+
         if xpad is not None:
             xpad = max(xpad, 0)
             if xpad != self._xpad:
-                self.notify("xpad")
                 self._xpad = xpad
-                _changed = True
+                _changed.append("xpad")
 
         if ypad is not None:
             ypad = max(ypad, 0)
             if ypad != self._ypad:
-                self.notify("ypad")
                 self._ypad = ypad
-                _changed = True
+                _changed.append("ypad")
 
         if _changed:
-            self.queue_resize()
-
-        self.thaw_notify()
+            with self.freeze_notify():
+                for prop in _changed:
+                    self.notify(prop)
+                self._move_resize_content()
 
     ## get/set gproperties
     @property
