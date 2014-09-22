@@ -4,18 +4,16 @@ from gulib.compat import b, s
 
 from utk.misc import Misc
 from utk.canvas import TextCanvas
-from utk.text_layout import calc_pos, calc_coords, shift_line, default_layout
-
-# align modes
-LEFT = 'left'
-
-# wrap modes
-SPACE = 'space'
+from utk.text_layout import (
+    calc_pos, calc_coords, shift_line, default_layout,
+    ALIGN_LEFT, WRAP_SPACE,
+)
 
 class Label(Misc):
     __type_name__ = "UtkLabel"
 
-    def __init__(self, text="", align=LEFT, wrap=SPACE, layout=None):
+    def __init__(self, text="",
+                 align=ALIGN_LEFT, wrap=WRAP_SPACE, layout=None):
         super(Label, self).__init__()
         self._text = None
         self._align_mode = None
@@ -63,10 +61,19 @@ class Label(Misc):
         self._align_mode = mode
         self.queue_draw()
 
-    def request_content_size(self):
-        text_lines = self.text.split("\n")
-        text_width = max([len(l) for l in text_lines])
-        return (text_width, len(text_lines))
+    align = property(lambda s: s._align_mode, set_align_mode)
+    wrap = property(lambda s: s._wrap_mode, set_wrap_mode)
+    layout = property(lambda s: s._layout)
+
+    def request_content_size(self, cols=None):
+        if cols is not None:
+            trans = self.layout.layout(text, cols,
+                                       self._align_mode, self._wrap_mode)
+            width = self.layout.packed_size(cols, trans)
+        else:
+            trans = self.text.split("\n")
+            width = max([len(l) for l in trans])
+        return (width, len(trans))
 
     def get_content_canvas(self, left, top, cols, rows):
         text = self.text.split("\n")
