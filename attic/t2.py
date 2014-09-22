@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 import utk
 import gulib
 
-utk.configure_logging("/dev/pts/1")
+if os.path.exists("/dev/pts/1"):
+    utk.configure_logging("/dev/pts/1")
 
 class TestWidget(utk.widget.Widget):
     __type_name__ = "CustomWidget"

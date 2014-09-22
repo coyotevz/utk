@@ -278,6 +278,9 @@ class Canvas(object):
 
 
 class SolidCanvas(Canvas):
+    """
+    A canvas filled completely with a single character.
+    """
 
     def __init__(self, fill_char, attr=None, left=0, top=0, cols=1, rows=1):
         end, col = calc_text_pos(fill_char, 0, len(fill_char), 1)
@@ -400,6 +403,9 @@ class TextCanvas(Canvas):
         return text, attr, cs
 
 class BlankCanvas(Canvas):
+    """
+    A canvas with nothing on it, only works as part of a composite canvas
+    """
 
     def body_content(self, trim_left=0, trim_top=0, cols=None, rows=None, attr=None):
         if cols is None:
