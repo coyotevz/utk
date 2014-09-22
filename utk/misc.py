@@ -106,6 +106,8 @@ class Misc(Widget):
 
     def _move_resize_content(self):
         # TODO: Recalculate available size for content
+        if not self._content_canvas:
+            return
         left, top = self.get_left_top()
         self._content_canvas.move_to(left, top)
         self.queue_draw()

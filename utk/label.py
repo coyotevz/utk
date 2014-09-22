@@ -11,7 +11,8 @@ class Label(Misc):
 
     def __init__(self, text=""):
         super(Label, self).__init__()
-        self._text = b(text)
+        self._text = None
+        self.set_text(text)
 
     def get_text(self):
         return s(self._text)
@@ -25,7 +26,7 @@ class Label(Misc):
         if text != self._text:
             self._text = text
             if self.is_realized:
-                self._content_canvas._text = [self._text]
+                self._content_canvas._text = self._text.split("\n")
             self.notify("text")
             self.queue_resize()
             self.queue_draw()
@@ -38,5 +39,5 @@ class Label(Misc):
         return (text_width, len(text_lines))
 
     def get_content_canvas(self, left, top, cols, rows):
-        return TextCanvas(text=[self.text], left=left, top=top,
-                                            cols=cols, rows=rows)
+        text = self.text.split("\n")
+        return TextCanvas(text=text, left=left, top=top, cols=cols, rows=rows)

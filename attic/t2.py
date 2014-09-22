@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import random
 
 import utk
 import gulib
@@ -37,7 +38,7 @@ class TestWidget(utk.widget.Widget):
 
 w = utk.Window()
 w.set_border_width(2)
-label = utk.Label("test")
+label = utk.Label("this is a test\nlabel")
 w.show()
 
 def quit():
@@ -45,21 +46,21 @@ def quit():
 
 def add():
     w.add(label)
+    label.set_padding(xpad=3, ypad=1)
     label.show()
 
 def sett():
     label.set_text("new content")
 
-def movex():
-    label.xalign = 1
-
-def movey():
-    label.yalign = 0
-
+def move():
+    label.set_alignment(xalign=random.random(), yalign=random.random())
 
 gulib.timeout_add_seconds(2, add)
-gulib.timeout_add_seconds(4, movex)
-gulib.timeout_add_seconds(6, movey)
+gulib.timeout_add_seconds(3, move)
+gulib.timeout_add_seconds(4, move)
+gulib.timeout_add_seconds(5, move)
+gulib.timeout_add_seconds(6, move)
+gulib.timeout_add_seconds(7, move)
 gulib.timeout_add_seconds(8, quit)
 
 
