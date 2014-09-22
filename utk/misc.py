@@ -10,9 +10,13 @@
     :license: LGPL2 or later (see README/COPYING/LICENSE)
 """
 
-from utk.utils import clamp
-from utk.widget import Widget
+import logging
 
+from utk.utils import clamp, Requisition
+from utk.widget import Widget
+from utk.canvas import SolidCanvas
+
+log = logging.getLogger("utk.misc")
 
 class Misc(Widget):
     """
@@ -28,16 +32,77 @@ class Misc(Widget):
 
     def __init__(self):
         super(Misc, self).__init__()
+        self._content_canvas = None
+        self._content_size = None
         self._xalign = 0.5
         self._yalign = 0.5
         self._xpad = 0
         self._ypad = 0
 
+    # "map" handler
+    def do_map(self):
+        if not self.is_realized:
+            raise Warning("You must realize() a widget before call map()")
+        if not self.is_mapped:
+            self._mapped = True
+            self._canvas.show()
+            self._content_canvas.show()
+            self.queue_draw()
+
+    # "unmap" handler
+    def do_unmap(self):
+        if self.is_mapped:
+            self._mapped = False
+            self._content_canvas.hide()
+            self._canvas.hide()
+            self.queue_draw()
+
+    # "size-request" handler
+    def do_size_request(self):
+        width, height = self.get_content_size()
+        return Requisition(self.xpad*2+width, self.ypad*2+height)
+
+    # "realize" handler
+    def do_realize(self):
+        assert self._canvas is None
+        assert self._content_canvas is None
+
+        req = self._requisition
+        alloc = self._allocation
+        left, top = self.get_left_top()
+        width, height = self.get_content_size()
+
+        canvas = SolidCanvas(' ', left=alloc.x, top=alloc.y,
+                             cols=alloc.width, rows=alloc.height)
+        content_canvas = self.get_content_canvas(left, top, width, height)
+
+        canvas.add_child(content_canvas)
+        canvas.set_parent_widget(self.parent)
+        self._realized = True
+
+        self._canvas = canvas
+        self._content_canvas = content_canvas
+
+    # "unrealize" handler
+    def do_unrealize(self):
+        self._realized = False
+        self._content_canvas.unparent()
+        self._canvas.unparent()
+        self._canvas = self._content_canvas = None
+
+    def get_content_size(self):
+        if self._content_size is None:
+            self._content_size = self.request_content_size()
+        return self._content_size
+
     def get_left_top(self):
         alloc = self._allocation
-        req = self._requisition
-        return (int((alloc.width - req.width) * self.xalign) + alloc.x,
-                int((alloc.height - req.height) * self.yalign) + alloc.y)
+        req = self.get_content_size()
+        left = int(alloc.x+self.xpad+\
+                   self.xalign*(alloc.width-2*self.xpad-req[0]))
+        top = int(alloc.y+self.ypad+\
+                  self.yalign*(alloc.height-2*self.ypad-req[1]))
+        return (left, top)
 
     def set_alignment(self, xalign=None, yalign=None):
         _changed = False

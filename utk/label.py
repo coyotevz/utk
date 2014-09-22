@@ -3,7 +3,6 @@
 from gulib.compat import b, s
 
 from utk.misc import Misc
-from utk.utils import Requisition
 from utk.canvas import TextCanvas
 
 
@@ -26,37 +25,18 @@ class Label(Misc):
         if text != self._text:
             self._text = text
             if self.is_realized:
-                self._canvas._text = [self._text]
+                self._content_canvas._text = [self._text]
             self.notify("text")
             self.queue_resize()
             self.queue_draw()
 
     text = property(get_text, set_text)
 
-    # "size-request" signal handler
-    def do_size_request(self):
-        text_lines = self.text.split('\n')
+    def request_content_size(self):
+        text_lines = self.text.split("\n")
         text_width = max([len(l) for l in text_lines])
-        return Requisition(self.xpad*2+text_width,
-                           self.ypad*2+len(text_lines))
+        return (text_width, len(text_lines))
 
-    # "realize" signal handler
-    def do_realize(self):
-        assert self._canvas is None
-        self._realized = True
-        #self._canvas = TextCanvas(text=[self._text],
-        #                          left=self._allocation.x,
-        #                          top=self._allocation.y,
-        #                          cols=self._allocation.width,
-        #                          rows=self._allocation.height)
-
-        req = self._requisition
-        left, top = self.get_left_top()
-        self._canvas = TextCanvas(text=[self._text],
-                                  left=left, top=top,
-                                  cols=req.width, rows=req.height)
-        self._canvas.set_parent_widget(self.parent)
-
-    def do_unrealize(self):
-        self._realized = False
-        self._canvas = None
+    def get_content_canvas(self, left, top, cols, rows):
+        return TextCanvas(text=[self.text], left=left, top=top,
+                                            cols=cols, rows=rows)

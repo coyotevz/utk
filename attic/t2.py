@@ -38,8 +38,6 @@ class TestWidget(utk.widget.Widget):
 w = utk.Window()
 w.set_border_width(2)
 label = utk.Label("test")
-label.set_alignment(1, 0)
-label.set_padding(1, 1)
 w.show()
 
 def quit():
@@ -49,8 +47,16 @@ def add():
     w.add(label)
     label.show()
 
+def sett():
+    label.set_text("new content")
+
+def move():
+    label.xalign = 0
+
 gulib.timeout_add_seconds(2, add)
-gulib.timeout_add_seconds(4, quit)
+#gulib.timeout_add_seconds(4, sett)
+gulib.timeout_add_seconds(6, move)
+gulib.timeout_add_seconds(8, quit)
 
 
 utk.register_palette([
