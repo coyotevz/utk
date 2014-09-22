@@ -4,15 +4,26 @@ from gulib.compat import b, s
 
 from utk.misc import Misc
 from utk.canvas import TextCanvas
+from utk.text_layout import calc_pos, calc_coords, shift_line, default_layout
 
+# align modes
+LEFT = 'left'
+
+# wrap modes
+SPACE = 'space'
 
 class Label(Misc):
     __type_name__ = "UtkLabel"
 
-    def __init__(self, text=""):
+    def __init__(self, text="", align=LEFT, wrap=SPACE, layout=None):
         super(Label, self).__init__()
         self._text = None
+        self._align_mode = None
+        self._wrap_mode = None
+        self._layout = None
+
         self.set_text(text)
+        self.set_layout(align, wrap, layout)
 
     def get_text(self):
         return s(self._text)
@@ -32,6 +43,25 @@ class Label(Misc):
             self.queue_draw()
 
     text = property(get_text, set_text)
+
+    def set_layout(self, align, wrap, layout=None):
+        if layout is None:
+            layout = default_layout
+        self._layout = layout
+        self.set_align_mode(align)
+        self.set_wrap_mode(wrap)
+
+    def set_wrap_mode(self, mode):
+        if not self.layout.supports_wrap_mode(mode):
+            raise AttributeError("Wrap mode {} not supported.".format(mode))
+        self._wrap_mode = mode
+        self.queue_draw()
+
+    def set_align_mode(self, mode):
+        if not self.layout.supports_align_mode(mode):
+            raise AttributeError("Align mode {} not supported.".format(mode))
+        self._align_mode = mode
+        self.queue_draw()
 
     def request_content_size(self):
         text_lines = self.text.split("\n")
