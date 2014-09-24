@@ -55,6 +55,135 @@ class StandardTextLayout(object):
             maxwidth = max(maxwidth, lw)
         return maxwidth
 
+    def align_layout(self, text, width, segs, wrap, align):
+        out = []
+        for l in segs:
+            sc = line_width(l)
+            if sc == width or align == ALIGN_LEFT:
+                out.append(l)
+            elif align == ALIGN_RIGHT:
+                out.append([(width-sc, None)] + l)
+            elif align == ALIGN_CENTER:
+                out.append([((width-sc+1) // 2, None)] + l)
+            else:
+                raise ValueError("Not supported align mode '%s'" % align)
+        return out
+
+    def calculate_text_segments(self, text, width, wrap):
+        """
+        Calculate the segments of text to display given width screen columns to
+        display them.
+
+        text - unicode text or byte string to display
+        width - number of available screen columns
+        wrap - wrapping mode used
+
+        Returns a layout structure without alignment applied.
+        """
+        nl, nl_o, sp_o = "\n", "\n", " "
+        # TODO: Handle PYTHON3 case
+        b = []
+        p = 0
+        if wrap == WRAP_CLIP:
+            # no wrapping to calculate, so it's easy.
+            while p <= len(text):
+                n_cr = text.find(nl, p)
+                if n_cr == -1:
+                    n_cr = len(text)
+                sc = calc_width(text, p, n_cr)
+                l = [(0, n_cr)]
+                if p != n_cr:
+                    l = [(sc, p, n_cr)] + l
+                b.append(l)
+                p = n_cr + 1
+            return b
+
+        while p <= len(text):
+            # look for next elegible line break
+            n_cr = text.find(nl, p)
+            if n_cr == -1:
+                n_cr = len(text)
+            sc = calc_width(text, p, n_cr)
+            if sc == 0:
+                # removed character hint
+                b.append([(0, n_cr)])
+                p = n_cr + 1
+                continue
+            if sc <= width:
+                # this segment fits
+                b.append([(sc, p, n_cr),
+                          (0, n_cr)])  # removed character hint
+                p = n_cr + 1
+                continue
+            pos, sc = calc_text_pos(text, p, n_cr, width)
+            if pos == p: # pathological width=1 double-byte case
+                raise ValueError("Wide character will not fit in 1-column width")
+            if wrap == "any":
+                b.append([(sc, p, pos)])
+                p = pos
+                continue
+            # wrap == 'space'
+            if text[pos] == sp_o:
+                # perfect space wrap
+                b.append([(sc, p, pos),
+                          (0, pos)])  # removed character hint
+                p = pos + 1
+                continue
+            if is_wide_char(text, pos):
+                # perfect next wide
+                b.append([(sc, p, pos)])
+                p = pos
+                continue
+            prev = pos
+            while prev > p:
+                prev = move_prev_char(text, p, prev)
+                if text[prev] == sp_o:
+                    sc = calc_width(text, p, prev)
+                    l = [(0, prev)]
+                    if p != prev:
+                        l = [(sc, p, prev)] + l
+                    b.append(l)
+                    p = prev + 1
+                    break
+                if is_wide_char(text, prev):
+                    # wrap after wide char
+                    next = move_next_char(text, prev, pos)
+                    sc = calc_with(text, p, next)
+                    b.append([sc, p, next])
+                    p = next
+                    break
+            else:
+                # unwrap previous line space if possible to fir more text
+                # (we're breaking a wird anyway)
+                if b and (len(b[-1]) == 2 or (len(b[-1]) == 1 and\
+                                              len(b[-1][0]) == 2)):
+                    # look for removed space above
+                    if len(b[-1]) == 1:
+                        [(h_sc, h_off)] = b[-1]
+                        p_sc = 0
+                        p_off = p_end = h_off
+                    else:
+                        [(p_sc, p_off, p_end),
+                               (h_sc, h_off)] = b[-1]
+                    if (p_sc < width and h_sc == 0 and text[h_off] == sp_o):
+                        # combine with previous line
+                        del b[-1]
+                        p = p_off
+                        pos, sc = calc_text_pos(text, p, n_cr, width)
+                        b.append([(sc, p, pos)])
+                        # check for trailing " " or "\n"
+                        p = pos
+                        if p < len(text) and (text[p] in (sp_o, nl_o)):
+                            # removed character hint
+                            b[-1].append((0, p))
+                            p += 1
+                        continue
+
+                # force any char wrap
+                b.append([(sc, p, pos)])
+                p = pos
+        return b
+
 # default layout
 default_layout = StandardTextLayout()
 
@@ -64,7 +193,7 @@ class LayoutSegment(_LayoutSegment):
     __slots__ = ()
 
     def __new__(cls, seg):
-        assert type(seg) == tuple, repr(seg)
+        assert isinstance(seg, tuple), repr(seg)
         assert len(seg) in (2, 3), repr(seg)
         sc, offs = seg[:2]
         assert isinstance(sc, int), repr(sc)
