@@ -1,0 +1,58 @@
+Supongamos que tenemos una pantalla de 20x7 (20 caracteres de ancho y 7 de
+alto)
+
+   0----5----10---15---20
+0    
+1   00000000000000000000
+2   00000000000000000000
+3   00000000000000000000
+4   00000000000000000000
+5   00000000000000000000
+6   00000000000000000000
+7   00000000000000000000
+
+
+Para almacenar la información del texto a mostrar en cada posición y los
+attributos correspondintes vamos un utilizar un método llamado RLE (Run Length
+Encoding), tambien utilizado en la compresión de información, esto nos permite
+manejar la información de manera eficiente y como efecto secundario utiliza
+menos espcio para su almacenamiento.
+
+Al momento de refrescar la información en la pantalla, esta solicita a su
+`topcanvas` que le envíe el contenido a mostrar a travez del método
+Canvas.content(), este a su vez solicita a los canvas hijos que le envíen su
+contenido.
+
+   0----5----10---15---20
+0    
+1   00000000000000000000
+2   00011111111111111100
+3   00011112222222222100
+4   00011112222222222100
+5   00011111111111111100
+6   00000000000000000000
+7   00000000000000000000
+
+En este caso el canvas `0` solicitaría al canvas `1` su contenido y este le
+solicitaría al canvas `2` su contenido y asi sucesivamente.
+
+A su vez la pantalla para optimizar el proceso de dibujo almacena los
+resultados obtenidos en fragmentos `Shards` de los correspondientes canvas y
+solo solicita a los canvas que le envíen la información de lo que ha cambiado.
+Para esto el canvas debe conocer la región o regiones que han cambiado y esto
+lo hace a travez del attributo Canvas.updates, donde lista todas las regiones
+que deben ser actualizadas por la pantalla.
+
+Entonces para el ejemplo anterior la pantalla recibe por parte de del canvas
+`0` un primer shard que esta compuesto por ('0', 20), esto significa que el
+caracter '0' se repite 20 veces, luego cuando solicita el contenido de la
+segunda fila el canvas devuelve [('0', 3), ('1', 15), ('0', 2)], lo que
+significa que el caracter '0' se repite por 3 veces luego el caracter '1' se
+repite 15 veces y luego el caracter '0' se repite 2 veces.
+Para la tercer fila se devolvería lo siguente [('0', 3), ('1', 4), ('2', 10),
+('1', 1), ('0', 2)].
+
+El canvas '0' a su vez construye los valores consultando a su canvas hijos por
+el contenido a mostrar, en este caso el canvas '1' devolvería para la segunda
+fila [('1', 15)] y para la tercer fila [('1', 4), ('2', 10), ('1', 1)], quien a
+su vez solicita al canvas '2' sobre el contenido a mostrar.
