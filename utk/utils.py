@@ -76,6 +76,33 @@ class Rectangle(_Rectangle):
         height = max(self.y+self.height, other.y+other.height) - y
         return Rectangle(x, y, width, height)
 
+    def difference(self, other):
+        """
+        Return a list of rectangles that result of self substracting other.
+        """
+        inter = self.intersection(other)
+        if inter is None or inter == self:
+            return []
+        res = []
+        # build R1
+        res.append(Rectangle(self.x, self.y, self.width, (inter.y-self.y)))
+        # build R2
+        res.append(Rectangle(self.x, inter.y, (inter.x-self.x), inter.height))
+        # build R3
+        res.append(Rectangle((inter.x+inter.width),
+                             inter.y,
+                             (self.width-inter.width-inter.x+self.x),
+                             inter.height))
+        # build R4
+        res.append(Rectangle(self.x,
+                             (inter.y+inter.height),
+                             self.width,
+                             (self.y+self.height-inter.y-inter.height)))
+
+        return filter(None, res)
+
+    def __nonzero__(self):
+        return (self.height > 0) and (self.width > 0)
 
 class StoppingContext(object):
     """

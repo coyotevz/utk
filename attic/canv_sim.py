@@ -2,16 +2,6 @@
 
 from utk.utils import Rectangle
 
-def diff(r1, r2):
-    i = r1.intersection(r2)
-    res = []
-    if r1.y < i.y:
-        res.append(Rectangle(r1.x, r1.y, r1.width, (r1.height+r1.y)-(i.height+i.y)))
-    if r1.x < i.x:
-        res.append(Rectangle(r1.x, i.y, (r1.width+r1.x)-(i.width+i.x), i.height))
-
-    return res if res else None
-
 class Canvas(object):
 
     def __init__(self, left=0, top=0, cols=1, rows=1):
